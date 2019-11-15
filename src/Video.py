@@ -43,14 +43,10 @@ class video(Thread):
                 break
 
 
-<< << << < HEAD
    if self.c:
         self.run()
     else:
         self.stopthread()
-== =====
-   self.stopthread()
->>>>>> > 689714ff12cd3189bafb7d47e483f8ec62bb8da0
 
    def stopthread(self):
         self.arret = True
