@@ -8,7 +8,9 @@ import screeninfo
 import random
 from Camera import camera
 from Video import video
+import numpy as np
 
+#coucou
 Afficher = True;
 Cordonner = False;
 
@@ -43,30 +45,35 @@ def main():
 
         Video = None;
         Camera = None;
+        VideoPoint = None;
+        CameraPoint = None;
         rand = 0;
         while True:
-            #print(Camera_thread.frame_count)
-            #print(Video_thread.frame_count)
             if len(Camera_thread.List) != 0:
                 Camera = Camera_thread.List[0]
                 del Camera_thread.List[0]
+            if len(Camera_thread.ListPoint) != 0:
+                CameraPoint = Camera_thread.ListPoint[0]
+                del Camera_thread.ListPoint[0]
             if len(Video_thread.List) != 0:
                 Video = Video_thread.List[0]
                 del Video_thread.List[0]
                 if Video_thread.frame_count%100 == 0:
                     rand = random.randint(0,len(MOT_DOUX)-1)
-                    print(rand)
-            if not Video is None and not Camera is None:
+            if len(Video_thread.ListPoint) != 0:
+                VideoPoint = Video_thread.ListPoint[0]
+                del Video_thread.ListPoint[0]
+            if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None:
                 Video[0:Camera.shape[0],Video.shape[1]-Camera.shape[1]:Video.shape[1]] = Camera
                 cv2.putText(Video, MOT_DOUX[rand], (100, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
                 cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
                 cv2.setWindowProperty('Video',cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
                 cv2.imshow('Video',Video)
-
-                if cv2.waitKey(25) & 0xFF == ord('q'):
-                    Camera_thread.stopthread()
-                    Video_thread.stopthread()
-                    break
+                #print(sum(CameraPoint)-sum(VideoPoint))
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                Video_thread.c = False
+                Camera_thread.c = False
+                break
 
 if __name__ == "__main__":
     main()

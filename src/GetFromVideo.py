@@ -28,6 +28,9 @@ def main():
         output_stride = model_cfg['output_stride']
         cap = cv2.VideoCapture(args.file)
         while True:
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                self.stopthread()
+                break
             input_image, display_image, output_scale = posenet.read_cap(
                 cap, scale_factor=args.scale_factor, output_stride=output_stride)
 
