@@ -1,33 +1,36 @@
+import numpy as np
+from threading import Thread
+import sys
+import random
+import screeninfo
+import posenet
+import argparse
+import time
+import cv2
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
-import cv2
-import time
-import argparse
-import posenet
-import screeninfo
-import random
-import sys
-from threading import Thread
-import numpy as np
+
 
 class camera(Thread):
 
     """Thread chargé simplement d'afficher une lettre dans la console."""
-    def __init__(self,args,sess,model_cfg, model_outputs):
+
+    def __init__(self, args, sess, model_cfg, model_outputs):
         self.List = []
         self.ListPoint = []
+        self.arret = False
         self.frame_count = 0
         self.cap = cv2.VideoCapture(args.cam_id)
         self.cap.set(3, args.cam_width)
         self.cap.set(4, args.cam_height)
-        self.model_cfg = model_cfg;
+        self.model_cfg = model_cfg
         self.model_outputs = model_outputs
         self.output_stride = model_cfg['output_stride']
-        self.args = args;
+        self.args = args
         self.sess = sess
         self.hotpoints = ['leftWrist', 'rightWrist', 'leftShoulder',
-                     'rightShoulder', 'leftKnee', 'rightKnee']
-        self.c= True;
+                          'rightShoulder', 'leftKnee', 'rightKnee']
+        self.c = True
         Thread.__init__(self)
 
     def run(self):
@@ -35,7 +38,6 @@ class camera(Thread):
         while self.c == True:
             input_image, display_image, output_scale = posenet.read_cap(
                 self.cap, scale_factor=self.args.scale_factor, output_stride=self.output_stride)
-
 
             heatmaps_result, offsets_result, displacement_fwd_result, displacement_bwd_result = self.sess.run(
                 self.model_outputs,
@@ -71,7 +73,7 @@ class camera(Thread):
             self.List.append(overlay_image.copy())
             self.frame_count += 1
             if not self.c:
-                self.stopthread();
+                self.stopthread()
 
     def stopthread(self):
-        self.arret=True
+        self.arret = True
