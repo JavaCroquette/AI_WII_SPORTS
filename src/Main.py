@@ -36,7 +36,7 @@ def main():
 
         model_cfg, model_outputs = posenet.load_model(args.model, sess)
         Camera_thread = camera(args,sess,model_cfg, model_outputs);
-        Video_thread = video(MOT_DOUX);
+        Video_thread = video(MOT_DOUX,'./Exercice1/video.avi','./Exercice1/video.npy');
 
         Camera_thread.start();
         Video_thread.start();

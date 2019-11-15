@@ -12,15 +12,17 @@ class video(Thread):
 
     """Thread chargé simplement d'afficher une lettre dans la console."""
 
-    def __init__(self,MOT_DOUX):
+    def __init__(self,MOT_DOUX,cheminVideo,cheminNpy):
         self.List = []
         self.frame_count = 0
         self.MOT_DOUX = MOT_DOUX
+        self.cheminVideo = cheminVideo
+        self.cheminNpy = cheminNpy
         Thread.__init__(self)
 
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
-        cap = cv2.VideoCapture('video.avi')
+        cap = cv2.VideoCapture(self.cheminVideo)
 
         if (cap.isOpened()== False):
             print("Error opening video stream or file")
