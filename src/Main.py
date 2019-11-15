@@ -16,7 +16,7 @@ Cordonner = False;
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=int, default=101)
-parser.add_argument('--cam_id', type=int, default=0)
+parser.add_argument('--cam_id', type=int, default=1)
 parser.add_argument('--cam_width', type=int, default=320)
 parser.add_argument('--cam_height', type=int, default=240)
 parser.add_argument('--scale_factor', type=float, default=0.7125)
@@ -48,7 +48,13 @@ def main():
         VideoPoint = None;
         CameraPoint = None;
         rand = 0;
+        check = False;
+        sum = 0;
         while True:
+            if Camera_thread.arret == True or Video_thread.arret == True:
+                Video_thread.c = False
+                Camera_thread.c = False
+                break
             if len(Camera_thread.List) != 0:
                 Camera = Camera_thread.List[0]
                 del Camera_thread.List[0]
@@ -58,6 +64,7 @@ def main():
             if len(Video_thread.List) != 0:
                 Video = Video_thread.List[0]
                 del Video_thread.List[0]
+                check = True;
                 if Video_thread.frame_count%100 == 0:
                     rand = random.randint(0,len(MOT_DOUX)-1)
             if len(Video_thread.ListPoint) != 0:
@@ -65,7 +72,17 @@ def main():
                 del Video_thread.ListPoint[0]
             if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None:
                 Video[0:Camera.shape[0],Video.shape[1]-Camera.shape[1]:Video.shape[1]] = Camera
-                cv2.putText(Video, MOT_DOUX[rand], (100, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+                if check:
+                    sum = 0;
+                    for p in range(0,len(CameraPoint)):
+                        sum = sum + abs(CameraPoint[p][1][0] - VideoPoint[p][1][0])
+                        sum = sum + abs(CameraPoint[p][1][1] - VideoPoint[p][1][1])
+                    print(sum)
+                    print("===============")
+                    check = False;
+                cv2.putText(Video, str(sum), (100, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+
+
                 cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
                 cv2.setWindowProperty('Video',cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
                 cv2.imshow('Video',Video)

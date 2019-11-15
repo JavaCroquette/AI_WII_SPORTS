@@ -16,6 +16,7 @@ class camera(Thread):
     def __init__(self,args,sess,model_cfg, model_outputs):
         self.List = []
         self.ListPoint = []
+        self.arret=False
         self.frame_count = 0
         self.cap = cv2.VideoCapture(args.cam_id)
         self.cap.set(3, args.cam_width)

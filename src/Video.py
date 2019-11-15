@@ -15,6 +15,7 @@ class video(Thread):
 
     def __init__(self,MOT_DOUX,cheminVideo,cheminNpy):
         self.c = True;
+        self.arret=False
         self.List = []
         self.ListPoint = []
         self.frame_count = 0
@@ -39,10 +40,7 @@ class video(Thread):
                 time.sleep(.025)
             else:
                 break
-        if self.c:
-            self.run()
-        else:
-            self.stopthread()
+        self.stopthread()
 
     def stopthread(self):
         self.arret=True
