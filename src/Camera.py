@@ -8,15 +8,15 @@ import screeninfo
 import random
 import sys
 from threading import Thread
+import numpy as np
 
 class camera(Thread):
 
     """Thread chargé simplement d'afficher une lettre dans la console."""
-
     def __init__(self,args,sess,model_cfg, model_outputs):
         self.List = []
+        self.ListPoint = []
         self.frame_count = 0
-        Thread.__init__(self)
         self.cap = cv2.VideoCapture(args.cam_id)
         self.cap.set(3, args.cam_width)
         self.cap.set(4, args.cam_height)
@@ -25,10 +25,14 @@ class camera(Thread):
         self.output_stride = model_cfg['output_stride']
         self.args = args;
         self.sess = sess
+        self.hotpoints = ['leftWrist', 'rightWrist', 'leftShoulder',
+                     'rightShoulder', 'leftKnee', 'rightKnee']
+        self.c= True;
+        Thread.__init__(self)
 
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
-        while True:
+        while self.c == True:
             input_image, display_image, output_scale = posenet.read_cap(
                 self.cap, scale_factor=self.args.scale_factor, output_stride=self.output_stride)
 
@@ -47,6 +51,16 @@ class camera(Thread):
                 max_pose_detections=1,
                 min_pose_score=0)
 
+            newPose = []
+            for pi in range(len(pose_scores)):
+                if pose_scores[pi] == 0.:
+                    break
+                for ki, (s, c) in enumerate(zip(keypoint_scores[pi, :], keypoint_coords[pi, :, :])):
+                    if posenet.PART_NAMES[ki] in self.hotpoints:
+                        newPose.append([posenet.PART_NAMES[ki], c])
+                if pi == 0:
+                    self.ListPoint.append(newPose)
+
             keypoint_coords *= output_scale
 
             overlay_image = posenet.draw_skel_and_kp(
@@ -56,6 +70,8 @@ class camera(Thread):
 
             self.List.append(overlay_image.copy())
             self.frame_count += 1
-            
+            if not self.c:
+                self.stopthread();
+
     def stopthread(self):
         self.arret=True
