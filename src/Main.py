@@ -75,16 +75,14 @@ def main():
                 VideoPoint = Video_thread.ListPoint[0]
                 del Video_thread.ListPoint[0]
             if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None:
-                Video[0:Camera.shape[0], Video.shape[1] -
-                      Camera.shape[1]:Video.shape[1]] = Camera
+                Video[0:Camera.shape[0], Video.shape[1] - Camera.shape[1]:Video.shape[1]] = Camera
                 if check:
                     sum = 0
                     for p in range(0, len(CameraPoint)):
-                        sum = sum + \
-                            abs(CameraPoint[p][1][0] - VideoPoint[p][1][0])
-                        sum = sum + \
-                            abs(CameraPoint[p][1][1] - VideoPoint[p][1][1])
-                    print(sum)
+                        sum = sum + abs(CameraPoint[p][1][0] - VideoPoint[p][1][0])
+                        sum = sum + abs(CameraPoint[p][1][1] - VideoPoint[p][1][1])
+                        print(str(CameraPoint[p][1][0]) + str(CameraPoint[p][1][1]))
+                        print(str(CameraPoint[p][1][1]) + str(VideoPoint[p][1][1]))
                     print("===============")
                     check = False
                 cv2.putText(Video, str(sum), (100, 100),
