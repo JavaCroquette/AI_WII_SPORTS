@@ -89,7 +89,13 @@ def draw(
 def draw_skel_and_kp(
         img, instance_scores, keypoint_scores, keypoint_coords,
         min_pose_score=0, min_part_score=0):
-    out_img = img
+    #out_img = img
+    width = img.shape[1]
+    height = img.shape[0] # keep original height
+    dim = (width, height)
+    out_img = np.empty((height,width,3),dtype = np.uint8)
+    out_img[:,:,:] = 0
+
     adjacent_keypoints = []
     cv_keypoints = []
     for ii, score in enumerate(instance_scores):
@@ -108,11 +114,11 @@ def draw_skel_and_kp(
 
     # JE NE SAIS PAS
     out_img = cv2.drawKeypoints(
-        out_img, cv_keypoints, outImage=np.array([]), color=(255, 255, 0),
+        out_img, cv_keypoints, outImage=np.array([]), color=(100, 100, 100),
         flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     # Afficher le Trait sur le corps
-    out_img = cv2.polylines(out_img, adjacent_keypoints, isClosed=False, color=(255, 255, 0))
+    out_img = cv2.polylines(out_img, adjacent_keypoints, isClosed=False, color=(100, 100, 100))
 
     return out_img
 
@@ -138,10 +144,10 @@ def draw_skel_and_kp_Return(
 
     # JE NE SAIS PAS
     out_img = cv2.drawKeypoints(
-        out_img, cv_keypoints, outImage=np.array([]), color=(255, 255, 0),
+        out_img, cv_keypoints, outImage=np.array([]), color=(100, 100, 100),
         flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     # Afficher le Trait sur le corps
-    out_img = cv2.polylines(out_img, adjacent_keypoints, isClosed=False, color=(255, 255, 0))
+    out_img = cv2.polylines(out_img, adjacent_keypoints, isClosed=False, color=(100, 100, 100))
 
     return out_img

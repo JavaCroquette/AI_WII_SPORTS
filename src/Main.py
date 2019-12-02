@@ -42,7 +42,7 @@ def main():
         model_cfg, model_outputs = posenet.load_model(args.model, sess)
         Camera_thread = camera(args, sess, model_cfg, model_outputs)
         Video_thread = video(
-            MOT_DOUX, './Exercice1/video.avi', './Exercice1/video.npy')
+            MOT_DOUX, './Exercice3/video.avi', './Exercice3/video.npy')
 
         Camera_thread.start()
         Video_thread.start()
@@ -74,25 +74,32 @@ def main():
             if len(Video_thread.ListPoint) != 0:
                 VideoPoint = Video_thread.ListPoint[0]
                 del Video_thread.ListPoint[0]
-            if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None:
-                Video[0:Camera.shape[0], Video.shape[1] - Camera.shape[1]:Video.shape[1]] = Camera
-                if check:
-                    sum = 0
-                    for p in range(0, len(CameraPoint)):
-                        sum = sum + abs(CameraPoint[p][1][0] - VideoPoint[p][1][0])
-                        sum = sum + abs(CameraPoint[p][1][1] - VideoPoint[p][1][1])
-                        print(str(CameraPoint[p][1][0]) + str(CameraPoint[p][1][1]))
-                        print(str(CameraPoint[p][1][1]) + str(VideoPoint[p][1][1]))
-                    print("===============")
-                    check = False
-                cv2.putText(Video, str(sum), (100, 100),
+            if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None and check:
+                widthV = Video.shape[1]
+                heightV = Video.shape[0] # keep original height
+                dim = (widthV, heightV)
+                widthC = Camera.shape[1]
+                heightC = Camera.shape[0]
+                # resize image
+                Camera = cv2.resize(Camera, dim, interpolation = cv2.INTER_AREA)
+                #Video[0:Camera.shape[0], Video.shape[1] - Camera.shape[1]:Video.shape[1]] = Camera
+                Video = Video + Camera
+                #Video = Camera
+                sum = 0
+                for p in range(0, len(CameraPoint)):
+                    sum = sum + abs(CameraPoint[p][1][0]/heightC*heightV - VideoPoint[p][1][0])
+                    sum = sum + abs(CameraPoint[p][1][1]/widthC*widthV - VideoPoint[p][1][1])
+                    #print(str(CameraPoint[p][1][0]/heightC*heightV) + str(CameraPoint[p][1][1]))
+                    #print(str(CameraPoint[p][1][1]/widthC*widthV) + str(VideoPoint[p][1][1]))
+                #print("===============")
+                check = False
+                cv2.putText(Video, str(int(sum)), (100, 100),
                             cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
 
                 cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
                 cv2.setWindowProperty(
                     'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                 cv2.imshow('Video', Video)
-                # print(sum(CameraPoint)-sum(VideoPoint))
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 Video_thread.c = False
                 Camera_thread.c = False
