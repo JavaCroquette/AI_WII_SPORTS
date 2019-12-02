@@ -41,6 +41,8 @@ def main():
 
         model_cfg, model_outputs = posenet.load_model(args.model, sess)
         Camera_thread = camera(args, sess, model_cfg, model_outputs)
+        # Camera_thread = video(
+        #    MOT_DOUX, './Exercice1/video.avi', './Exercice1/video.npy')
         Video_thread = video(
             MOT_DOUX, './Exercice1/video.avi', './Exercice1/video.npy')
 
@@ -88,16 +90,18 @@ def main():
                 sum = 0
                 for p in range(0, len(CameraPoint)):
                     sum = sum + \
-                        abs(CameraPoint[p][1][0]/heightC *
-                            heightV - VideoPoint[p][1][0])
+                        abs(CameraPoint[p][1][0]/heightC -
+                            VideoPoint[p][1][0]/heightV)
                     sum = sum + \
-                        abs(CameraPoint[p][1][1]/widthC *
-                            widthV - VideoPoint[p][1][1])
-                    #print(str(CameraPoint[p][1][0]/heightC*heightV) + str(CameraPoint[p][1][1]))
-                    #print(str(CameraPoint[p][1][1]/widthC*widthV) + str(VideoPoint[p][1][1]))
-                # print("===============")
+                        abs(CameraPoint[p][1][1]/widthC -
+                            VideoPoint[p][1][1]/widthV)
+                    print(
+                        str(abs(CameraPoint[p][1][0]/heightC - VideoPoint[p][1][0]/heightV)), end=" : ")
+                    print(
+                        str(abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)))
+                print("===============")
                 check = False
-                cv2.putText(Video, str(int(sum)), (100, 100),
+                cv2.putText(Video, str(round(sum, 2)), (100, 100),
                             cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
 
                 cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
