@@ -38,7 +38,7 @@ class video(Thread):
                 self.List.append(frame.copy())
                 self.ListPoint.append(self.npy[self.frame_count])
                 self.frame_count += 1
-                #time.sleep(.025)
+                #print("Video : " + str(self.frame_count))
             else:
                 break
 

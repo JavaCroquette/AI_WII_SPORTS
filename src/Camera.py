@@ -52,6 +52,7 @@ class camera(Thread):
                 max_pose_detections=1,
                 min_pose_score=0)
             newPose = []
+
             for pi in range(len(pose_scores)):
                 if pose_scores[pi] == 0.:
                     break
@@ -62,6 +63,8 @@ class camera(Thread):
                     self.ListPoint.append(newPose)
             self.List.append([pose_scores, keypoint_scores, keypoint_coords]);
             self.frame_count += 1
+
+            #print("Camera : " + str(self.frame_count))
             if not self.c:
                 self.stopthread()
 
