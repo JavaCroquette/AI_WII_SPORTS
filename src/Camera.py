@@ -10,7 +10,6 @@ import cv2
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
-
 class camera(Thread):
 
     """Thread chargé simplement d'afficher une lettre dans la console."""
@@ -52,7 +51,6 @@ class camera(Thread):
                 output_stride=self.output_stride,
                 max_pose_detections=1,
                 min_pose_score=0)
-
             newPose = []
             for pi in range(len(pose_scores)):
                 if pose_scores[pi] == 0.:
@@ -62,15 +60,7 @@ class camera(Thread):
                         newPose.append([posenet.PART_NAMES[ki], c])
                 if pi == 0:
                     self.ListPoint.append(newPose)
-
-            keypoint_coords *= output_scale
-
-            overlay_image = posenet.draw_skel_and_kp(
-                display_image, pose_scores, keypoint_scores, keypoint_coords,
-                min_pose_score=0, min_part_score=0)
-            overlay_image = cv2.flip(overlay_image, 1)
-
-            self.List.append(overlay_image.copy())
+            self.List.append([pose_scores, keypoint_scores, keypoint_coords]);
             self.frame_count += 1
             if not self.c:
                 self.stopthread()

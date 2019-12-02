@@ -7,6 +7,7 @@ import posenet
 import argparse
 import time
 import cv2
+import matplotlib.pyplot as plt
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
@@ -17,9 +18,9 @@ Cordonner = False
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=int, default=101)
 parser.add_argument('--cam_id', type=int, default=0)
-parser.add_argument('--cam_width', type=int, default=320)
-parser.add_argument('--cam_height', type=int, default=240)
-parser.add_argument('--scale_factor', type=float, default=0.7125)
+parser.add_argument('--cam_width', type=int, default=640)
+parser.add_argument('--cam_height', type=int, default=480)
+parser.add_argument('--scale_factor', type=float, default=1)
 parser.add_argument('--file', type=str, default=None,
                     help="Optionally use a video file instead of a live camera")
 args = parser.parse_args()
@@ -49,44 +50,54 @@ def main():
         Camera_thread.start()
         Video_thread.start()
 
-        Video = None
         Camera = None
+        Video = None
         VideoPoint = None
         CameraPoint = None
         rand = 0
         check = False
         sum = 0
+        i = 0
+        graph = []
+        fig = plt.figure()
+        plt.ylim(0,10)
         while True:
             if Camera_thread.arret == True or Video_thread.arret == True:
                 Video_thread.c = False
                 Camera_thread.c = False
                 break
+
             if len(Camera_thread.List) != 0:
                 Camera = Camera_thread.List[0]
                 del Camera_thread.List[0]
             if len(Camera_thread.ListPoint) != 0:
                 CameraPoint = Camera_thread.ListPoint[0]
                 del Camera_thread.ListPoint[0]
+
             if len(Video_thread.List) != 0:
                 Video = Video_thread.List[0]
                 del Video_thread.List[0]
                 check = True
-                if Video_thread.frame_count % 100 == 0:
-                    rand = random.randint(0, len(MOT_DOUX)-1)
             if len(Video_thread.ListPoint) != 0:
                 VideoPoint = Video_thread.ListPoint[0]
                 del Video_thread.ListPoint[0]
+
             if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None and check:
                 widthV = Video.shape[1]
-                heightV = Video.shape[0]  # keep original height
-                dim = (widthV, heightV)
-                widthC = Camera.shape[1]
-                heightC = Camera.shape[0]
+                heightV = Video.shape[0]
+                widthC = args.cam_width
+                heightC = args.cam_height
                 # resize image
-                Camera = cv2.resize(Camera, dim, interpolation=cv2.INTER_AREA)
-                #Video[0:Camera.shape[0], Video.shape[1] - Camera.shape[1]:Video.shape[1]] = Camera
-                Video = Video + Camera
-                #Video = Camera
+                pose_scores = Camera[0].copy()
+                keypoint_scores = Camera[1].copy()
+                keypoint_coords = Camera[2].copy()
+                keypoint_coords[0,:,0] = keypoint_coords[0,:,0]/heightC*heightV
+                keypoint_coords[0,:,1] = (-keypoint_coords[0,:,1]+widthC)/widthC*widthV
+
+                Video = posenet.draw_skel_and_kp(
+                    Video, pose_scores, keypoint_scores, keypoint_coords,
+                    min_pose_score=0.001, min_part_score=0.001)
+
                 sum = 0
                 for p in range(0, len(CameraPoint)):
                     sum = sum + \
@@ -95,14 +106,20 @@ def main():
                     sum = sum + \
                         abs(CameraPoint[p][1][1]/widthC -
                             VideoPoint[p][1][1]/widthV)
-                    print(
-                        str(abs(CameraPoint[p][1][0]/heightC - VideoPoint[p][1][0]/heightV)), end=" : ")
-                    print(
-                        str(abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)))
-                print("===============")
+                #    print(
+                #        str(abs(CameraPoint[p][1][0]/heightC - VideoPoint[p][1][0]/heightV)), end=" : ")
+                #    print(
+                #        str(abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)))
+                #print("===============")
                 check = False
                 cv2.putText(Video, str(round(sum, 2)), (100, 100),
                             cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+                #plt.plot(i, sum, "or")
+                #i = i + 1
+                #fig.canvas.draw()
+                #data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+                #data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+                #Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
 
                 cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
                 cv2.setWindowProperty(
