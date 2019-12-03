@@ -1,6 +1,7 @@
 import numpy as np
 from Video import video
 from Camera import camera
+import os
 import random
 import screeninfo
 import posenet
@@ -33,9 +34,12 @@ MOT_DOUX = ["TES NULL",
             "HAA C'EST JEOF",
             "MERCI, MERCI, MAIS NON MERCI"]
 rand = 0
+dir_path = os.path.dirname(os.path.realpath(__file__))
+video_path = dir_path+'/Exercice1/video.avi'
+positions_path = dir_path+'/Exercice1/video.npy'
 
 
-def main():
+def exercise(display, resolution):
     with tf.Session() as sess:
         start = time.time()
 
@@ -44,7 +48,7 @@ def main():
         # Camera_thread = video(
         #    MOT_DOUX, './Exercice1/video.avi', './Exercice1/video.npy')
         Video_thread = video(
-            MOT_DOUX, './Exercice1/video.avi', './Exercice1/video.npy')
+            MOT_DOUX, video_path, positions_path)
 
         Camera_thread.start()
         Video_thread.start()
@@ -84,9 +88,9 @@ def main():
                 heightC = Camera.shape[0]
                 # resize image
                 Camera = cv2.resize(Camera, dim, interpolation=cv2.INTER_AREA)
-                #Video[0:Camera.shape[0], Video.shape[1] - Camera.shape[1]:Video.shape[1]] = Camera
+                # Video[0:Camera.shape[0], Video.shape[1] - Camera.shape[1]:Video.shape[1]] = Camera
                 Video = Video + Camera
-                #Video = Camera
+                # Video = Camera
                 sum = 0
                 for p in range(0, len(CameraPoint)):
                     sum = sum + \
@@ -101,18 +105,18 @@ def main():
                         str(abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)))
                 print("===============")
                 check = False
-                cv2.putText(Video, str(round(sum, 2)), (100, 100),
+                """cv2.putText(Video, str(round(sum, 2)), (100, 100),
                             cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
 
                 cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
                 cv2.setWindowProperty(
                     'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                cv2.imshow('Video', Video)
+                cv2.imshow('Video', Video)"""
+                #print('Time running: %d...' %(time.time() - start), end='\r')
+                imgToDisplay = cv2.resize(
+                    Video, (resolution)).reshape((resolution[0]*resolution[1]*3))
+                display[:] = imgToDisplay[:]
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 Video_thread.c = False
                 Camera_thread.c = False
                 break
-
-
-if __name__ == "__main__":
-    main()
