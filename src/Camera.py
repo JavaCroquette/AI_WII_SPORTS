@@ -17,7 +17,7 @@ class camera(Thread):
     def __init__(self, args, sess, model_cfg, model_outputs):
         self.List = []
         self.ListPoint = []
-        self.arret = False
+        self.arret = True
         self.frame_count = 0
         self.cap = cv2.VideoCapture(args.cam_id)
         self.cap.set(3, args.cam_width)
@@ -29,12 +29,12 @@ class camera(Thread):
         self.sess = sess
         self.hotpoints = ['leftWrist', 'rightWrist', 'leftShoulder',
                           'rightShoulder', 'leftKnee', 'rightKnee']
-        self.c = True
         Thread.__init__(self)
 
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
-        while self.c == True:
+        while self.arret == True:
+
             input_image, display_image, output_scale = posenet.read_cap(
                 self.cap, scale_factor=self.args.scale_factor, output_stride=self.output_stride)
 
@@ -63,10 +63,7 @@ class camera(Thread):
                     self.ListPoint.append(newPose)
             self.List.append([pose_scores, keypoint_scores, keypoint_coords]);
             self.frame_count += 1
-
-            #print("Camera : " + str(self.frame_count))
-            if not self.c:
-                self.stopthread()
+            print("Camera : " + str(self.frame_count))
 
     def stopthread(self):
-        self.arret = True
+        self.arret = False
