@@ -87,7 +87,7 @@ def main():
                     sum = sum + abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)
                 listSum.append(sum)
                 check = False
-            
+
                 if sum < 0.5:
                     i = 0
                 elif sum < 1:
