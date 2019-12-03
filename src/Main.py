@@ -24,6 +24,11 @@ MOT_DOUX = ["Tres Bien",
             "Bien",
             "Assez bien",
             "Courage"]
+good = cv2.imread('img/good.png')
+bad = cv2.imread('img/bad.png')
+verygood = cv2.imread('img/verygood.png')
+courage = cv2.imread('img/courage.png')
+IMAGE = [verygood,good,bad,courage]
 
 def main():
     sess = tf.Session()
@@ -38,7 +43,7 @@ def main():
     CameraPoint = None
     rand = 0
     check = False
-    i = 0
+    i = 4
     graph = []
     fig = plt.figure(figsize=(8,2), dpi=80)
     listSum = []
@@ -82,12 +87,12 @@ def main():
                     sum = sum + abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)
                 listSum.append(sum)
                 check = False
-                i = 0
+            
                 if sum < 0.5:
                     i = 0
                 elif sum < 1:
                     i = 1
-                elif sum < 4:
+                elif sum < 3.5:
                     i = 2
                 else:
                     i = 3
@@ -109,6 +114,10 @@ def main():
                 data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
                 data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
             Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
+
+
+            img = IMAGE[i]
+            Video[250:img.shape[0]+250, img.shape[1]+100 -img.shape[1]:img.shape[1]+100] = img
 
             cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
