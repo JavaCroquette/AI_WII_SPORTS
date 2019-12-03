@@ -50,19 +50,22 @@ def main():
         if len(Camera_thread.List) != 0:
             Camera = Camera_thread.List[0]
             del Camera_thread.List[0]
+            Camera_thread.frame_count += 1
+            check = True
         if len(Camera_thread.ListPoint) != 0:
             CameraPoint = Camera_thread.ListPoint[0]
             del Camera_thread.ListPoint[0]
 
-        if len(Video_thread.List) != 0:
+        if len(Video_thread.List) != 0 and Camera is not None:
             Video = Video_thread.List[0]
             del Video_thread.List[0]
-            check = True
-        if len(Video_thread.ListPoint) != 0:
+            Video_thread.frame_count += 1
+        if len(Video_thread.ListPoint) != 0 and Camera is not None:
             VideoPoint = Video_thread.ListPoint[0]
             del Video_thread.ListPoint[0]
 
         if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None and check:
+            print("Camera : " + str(Camera_thread.frame_count)+" -- Video : " + str(Video_thread.frame_count))
             widthV = Video.shape[1]
             heightV = Video.shape[0]
             widthC = args.cam_width
@@ -93,13 +96,13 @@ def main():
             else:
                 i = 3
             cv2.putText(Video, str(MOT_DOUX[i]), (100, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
-            if Camera_thread.frame_count%2 == 0:
-                fig.canvas.draw()
-                plt.plot(Camera_thread.frame_count, sum, "or")
-                data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-                data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-            if data is not None:
-                Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
+            #if Camera_thread.frame_count%2 == 0:
+            #    fig.canvas.draw()
+            #    plt.plot(Camera_thread.frame_count, sum, "or")
+            #    data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+            #    data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+            #if data is not None:
+            #    Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
             cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty(
                 'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)

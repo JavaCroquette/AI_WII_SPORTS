@@ -62,8 +62,6 @@ class camera(Thread):
                 if pi == 0:
                     self.ListPoint.append(newPose)
             self.List.append([pose_scores, keypoint_scores, keypoint_coords]);
-            self.frame_count += 1
-            print("Camera : " + str(self.frame_count))
 
     def stopthread(self):
         self.arret = False
