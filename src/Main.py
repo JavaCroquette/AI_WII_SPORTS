@@ -7,6 +7,7 @@ import posenet
 import argparse
 import cv2
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
@@ -39,9 +40,8 @@ def main():
     check = False
     i = 0
     graph = []
-    fig = plt.figure()
-    plt.ylim(0,10)
-
+    fig = plt.figure(figsize=(8,2), dpi=80)
+    listSum = []
     Camera_thread.start()
     Video_thread.start()
 
@@ -80,6 +80,7 @@ def main():
                 for p in range(0, len(CameraPoint)):
                     sum = sum + abs(CameraPoint[p][1][0]/heightC - VideoPoint[p][1][0]/heightV)
                     sum = sum + abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)
+                listSum.append(sum)
                 check = False
                 i = 0
                 if sum < 0.5:
@@ -99,14 +100,18 @@ def main():
 
             cv2.putText(Video, str(MOT_DOUX[i]), (100, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
             cv2.putText(Video, str(round(sum,2)), (100, 200),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
-            #fig.canvas.draw()
-            #plt.plot(Camera_thread.frame_count, sum, "or")
-            #data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-            #data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-            #Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
+            if (Camera_thread.frame_count-1)%5 == 0:
+                plt.cla()
+                plt.ylim(0,5)
+                canvas = FigureCanvas(fig)
+                plt.plot(range(0,Camera_thread.frame_count), listSum)
+                canvas.draw()
+                data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+                data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+            Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
+
             cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
-            cv2.setWindowProperty(
-                'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video', Video)
 
         if Video_thread.Taille is not None:
@@ -119,6 +124,15 @@ def main():
             Video_thread.stopthread()
             Camera_thread.stopthread()
             break
+
+    print("C'EST FINIIIIIIIII ===============")
+    b = 0
+    for i in listSum:
+        b = b + i
+    print(b)
+    print(Video_thread.frame_count*5)
+    print(" !=! "+str(b / (Video_thread.frame_count*4)*100)+str(" %")+" !=! ")
+
 
 if __name__ == "__main__":
     main()
