@@ -37,7 +37,6 @@ def main():
     CameraPoint = None
     rand = 0
     check = False
-    sum = 0
     i = 0
     graph = []
     fig = plt.figure()
@@ -64,49 +63,57 @@ def main():
             VideoPoint = Video_thread.ListPoint[0]
             del Video_thread.ListPoint[0]
 
-        if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None and check:
-            print("Camera : " + str(Camera_thread.frame_count)+" -- Video : " + str(Video_thread.frame_count))
-            widthV = Video.shape[1]
-            heightV = Video.shape[0]
-            widthC = args.cam_width
-            heightC = args.cam_height
-            # resize image
-            pose_scores = Camera[0].copy()
-            keypoint_scores = Camera[1].copy()
-            keypoint_coords = Camera[2].copy()
-            keypoint_coords[0,:,0] = keypoint_coords[0,:,0]/heightC*heightV
-            keypoint_coords[0,:,1] = (-keypoint_coords[0,:,1]+widthC)/widthC*widthV
+        if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None:
+            if check:
+                print("Camera : " + str(Camera_thread.frame_count)+" -- Video : " + str(Video_thread.frame_count))
+                widthV = Video.shape[1]
+                heightV = Video.shape[0]
+                widthC = args.cam_width
+                heightC = args.cam_height
+                # resize image
+                pose_scores = Camera[0].copy()
+                keypoint_scores = Camera[1].copy()
+                keypoint_coords = Camera[2].copy()
+                keypoint_coords[0,:,0] = keypoint_coords[0,:,0]/heightC*heightV
+                keypoint_coords[0,:,1] = (-keypoint_coords[0,:,1]+widthC)/widthC*widthV
+                sum = 0
+                for p in range(0, len(CameraPoint)):
+                    sum = sum + abs(CameraPoint[p][1][0]/heightC - VideoPoint[p][1][0]/heightV)
+                    sum = sum + abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)
+                check = False
+                i = 0
+                if sum < 0.5:
+                    i = 0
+                elif sum < 1:
+                    i = 1
+                elif sum < 4:
+                    i = 2
+                else:
+                    i = 3
+            else:
+                print("Camera : " + str(Camera_thread.frame_count)+" == Video : " + str(Video_thread.frame_count))
 
             Video = posenet.draw_skel_and_kp(
                 Video, pose_scores, keypoint_scores, keypoint_coords,
                 min_pose_score=0.01, min_part_score=0.01)
 
-            sum = 0
-            for p in range(0, len(CameraPoint)):
-                sum = sum + abs(CameraPoint[p][1][0]/heightC - VideoPoint[p][1][0]/heightV)
-                sum = sum + abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)
-            check = False
-            i = 0
-            if sum < 1:
-                i = 0
-            elif sum < 2:
-                i = 1
-            elif sum < 3:
-                i = 2
-            else:
-                i = 3
             cv2.putText(Video, str(MOT_DOUX[i]), (100, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
-            #if Camera_thread.frame_count%2 == 0:
-            #    fig.canvas.draw()
-            #    plt.plot(Camera_thread.frame_count, sum, "or")
-            #    data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-            #    data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-            #if data is not None:
-            #    Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
+            cv2.putText(Video, str(round(sum,2)), (100, 200),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+            #fig.canvas.draw()
+            #plt.plot(Camera_thread.frame_count, sum, "or")
+            #data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+            #data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+            #Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
             cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty(
                 'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video', Video)
+
+        if Video_thread.Taille is not None:
+            if Video_thread.Taille == Video_thread.frame_count:
+                Video_thread.stopthread()
+                Camera_thread.stopthread()
+                break
 
         if cv2.waitKey(25) & 0xFF == ord('q'):
             Video_thread.stopthread()

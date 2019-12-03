@@ -18,6 +18,7 @@ class video(Thread):
         self.arret = True
         self.List = []
         self.ListPoint = []
+        self.Taille = None
         self.frame_count = 0
         self.MOT_DOUX = MOT_DOUX
         self.cheminVideo = cheminVideo
@@ -27,6 +28,7 @@ class video(Thread):
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
         cap = cv2.VideoCapture(self.cheminVideo)
+        self.Taille = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
         if (cap.isOpened() == False):
             print("Error opening video stream or file")
