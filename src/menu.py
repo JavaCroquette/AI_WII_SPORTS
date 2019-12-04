@@ -1,4 +1,3 @@
-from termcolor import colored
 import sharedmem
 import numpy as np
 import PIL
