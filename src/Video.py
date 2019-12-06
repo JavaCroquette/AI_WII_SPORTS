@@ -16,7 +16,6 @@ class video(Thread):
 
     def __init__(self, MOT_DOUX, cheminVideo, cheminNpy):
         self.arret = True
-        self.List = []
         self.ListPoint = []
         self.Taille = None
         self.frame_count = 0
@@ -36,8 +35,7 @@ class video(Thread):
         while(cap.isOpened() and self.arret == True):
             ret, frame = cap.read()
             if ret == True:
-                self.List.append(frame.copy())
-                self.ListPoint.append(self.npy[self.frame_count])
+                self.ListPoint.append([frame.copy(),self.npy[self.frame_count]])
             else:
                 break
         self.stopthread()

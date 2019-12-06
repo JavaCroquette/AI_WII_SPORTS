@@ -51,22 +51,18 @@ def main():
     Video_thread.start()
 
     while True:
-        if len(Camera_thread.List) != 0:
-            Camera = Camera_thread.List[0]
-            del Camera_thread.List[0]
+        if len(Camera_thread.ListPoint) != 0:
+            CameraPoint = Camera_thread.ListPoint[0][0]
+            Camera = Camera_thread.ListPoint[0][1:4]
+            del Camera_thread.ListPoint[0]
             Camera_thread.frame_count += 1
             check = True
-        if len(Camera_thread.ListPoint) != 0:
-            CameraPoint = Camera_thread.ListPoint[0]
-            del Camera_thread.ListPoint[0]
 
-        if len(Video_thread.List) != 0 and Camera is not None:
-            Video = Video_thread.List[0]
-            del Video_thread.List[0]
-            Video_thread.frame_count += 1
         if len(Video_thread.ListPoint) != 0 and Camera is not None:
-            VideoPoint = Video_thread.ListPoint[0]
+            Video = Video_thread.ListPoint[0][0]
+            VideoPoint = Video_thread.ListPoint[0][1]
             del Video_thread.ListPoint[0]
+            Video_thread.frame_count += 1
 
         if Video is not None and Camera is not None and CameraPoint is not None and VideoPoint is not None:
             if check:
@@ -83,8 +79,14 @@ def main():
                 keypoint_coords[0,:,1] = (-keypoint_coords[0,:,1]+widthC)/widthC*widthV
                 sum = 0
                 for p in range(0, len(CameraPoint)):
-                    sum = sum + abs(CameraPoint[p][1][0]/heightC - VideoPoint[p][1][0]/heightV)
-                    sum = sum + abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)
+                    if CameraPoint[p][1][0] is not None:
+                        sum = sum + abs(CameraPoint[p][1][0]/heightC - VideoPoint[p][1][0]/heightV)
+                    else:
+                        sum = sum + 5
+                    if CameraPoint[p][1][1] is not None:
+                        sum = sum + abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)
+                    else:
+                        sum = sum + 5
                 listSum.append(sum)
                 check = False
 

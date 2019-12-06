@@ -15,7 +15,6 @@ class camera(Thread):
     """Thread chargé simplement d'afficher une lettre dans la console."""
 
     def __init__(self, args, sess, model_cfg, model_outputs):
-        self.List = []
         self.ListPoint = []
         self.arret = True
         self.frame_count = 0
@@ -53,15 +52,13 @@ class camera(Thread):
                 min_pose_score=0)
             newPose = []
 
-            for pi in range(len(pose_scores)):
+            for pi in range(len(pose_scores)): #si plusieur personne
                 if pose_scores[pi] == 0.:
                     break
                 for ki, (s, c) in enumerate(zip(keypoint_scores[pi, :], keypoint_coords[pi, :, :])):
                     if posenet.PART_NAMES[ki] in self.hotpoints:
                         newPose.append([posenet.PART_NAMES[ki], c])
-                if pi == 0:
-                    self.ListPoint.append(newPose)
-            self.List.append([pose_scores, keypoint_scores, keypoint_coords]);
+            self.ListPoint.append([newPose,pose_scores, keypoint_scores, keypoint_coords]);
 
     def stopthread(self):
         self.arret = False
