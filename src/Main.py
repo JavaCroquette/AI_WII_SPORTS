@@ -8,6 +8,7 @@ import posenet
 import argparse
 import time
 import cv2
+import sharedmem
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
@@ -112,10 +113,9 @@ def exercise(display, resolution):
                 cv2.setWindowProperty(
                     'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                 cv2.imshow('Video', Video)"""
-                #print('Time running: %d...' %(time.time() - start), end='\r')
-                imgToDisplay = cv2.resize(
-                    Video, (resolution)).reshape((resolution[0]*resolution[1]*3))
-                display[:] = imgToDisplay[:]
+                display = cv2.resize(
+                    Video, (resolution[1], resolution[0]))
+                print('Time running: %d...' % (time.time() - start))
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 Video_thread.c = False
                 Camera_thread.c = False
