@@ -84,7 +84,7 @@ def main():
     sess = tf.Session()
     model_cfg, model_outputs = posenet.load_model(args.model, sess)
     Camera_thread = camera(args, sess, model_cfg, model_outputs)
-    Video_thread = video(MOT_DOUX, './Exercice1/video2.mp4', './Exercice1/video.npy')
+    Video_thread = video(MOT_DOUX, './Exercice3/Exercice3.mp4', './Exercice3/video3.npy')
 
     Camera = None
     data = None
