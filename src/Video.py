@@ -31,11 +31,13 @@ class video(Thread):
 
         if (cap.isOpened() == False):
             print("Error opening video stream or file")
+        i = 0
 
         while(cap.isOpened() and self.arret == True):
             ret, frame = cap.read()
             if ret == True:
-                self.ListPoint.append([frame.copy(),self.npy[self.frame_count]])
+                self.ListPoint.append([frame.copy(),self.npy[i]])
+                i += 1
             else:
                 break
         self.stopthread()

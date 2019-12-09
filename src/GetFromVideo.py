@@ -13,10 +13,6 @@ parser.add_argument('--file', type=str, default=None,
                     help="Optionally use a video file instead of a live camera")
 args = parser.parse_args()
 
-hotpoints = ['leftWrist', 'rightWrist', 'leftShoulder',
-             'rightShoulder', 'leftKnee', 'rightKnee']
-
-
 def main():
     if args.file is None:
         raise OSError("No file provided")
@@ -52,8 +48,7 @@ def main():
                 if pose_scores[pi] == 0.:
                     break
                 for ki, (s, c) in enumerate(zip(keypoint_scores[pi, :], keypoint_coords[pi, :, :])):
-                    if posenet.PART_NAMES[ki] in hotpoints:
-                        newPose.append([posenet.PART_NAMES[ki], c])
+                    newPose.append([posenet.PART_NAMES[ki], c])
                 if pi == 0:
                     if savePoses.size == 0:
                         savePoses = np.array([newPose])
