@@ -106,15 +106,20 @@ def exercise(display, resolution):
                         str(abs(CameraPoint[p][1][1]/widthC - VideoPoint[p][1][1]/widthV)))
                 print("===============")
                 check = False
-                """cv2.putText(Video, str(round(sum, 2)), (100, 100),
+                cv2.putText(Video, str(round(sum, 2)), (100, 100),
                             cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
 
                 cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
                 cv2.setWindowProperty(
                     'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                cv2.imshow('Video', Video)"""
-                display = cv2.resize(
+                cv2.imshow('Video', Video)
+
+                """imgToDisplay = cv2.resize(
                     Video, (resolution[1], resolution[0]))
+                imgToDisplay = cv2.cvtColor(imgToDisplay, cv2.COLOR_BGR2RGB)
+                imgToDisplay = np.reshape(imgToDisplay,
+                                          resolution[0]*resolution[1]*3)
+                display[:] = imgToDisplay[:]"""
                 print('Time running: %d...' % (time.time() - start))
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 Video_thread.c = False
