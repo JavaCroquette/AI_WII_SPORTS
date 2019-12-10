@@ -26,7 +26,6 @@ args = parser.parse_args()
 #==============================================================================#
 MOT_DOUX = ["Tres Bien", "Bien", "Assez bien", "Courage"]
 #==============================================================================#
-# TODO enlever cette ligne
 good = cv2.imread('img/good.png')
 bad = cv2.imread('img/bad.png')
 verygood = cv2.imread('img/verygood.png')
@@ -52,7 +51,6 @@ def Centremassev1(a, b, c, d):
 def Patron(Liste, Video):
     if not len(Liste) == 0:
         # TODO si quelqu'un arrive a faire sans les liste x)
-        # TODO
         X = []
         Y = []
         for i in range(0, len(Liste)):
