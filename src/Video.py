@@ -15,37 +15,33 @@ class video(Thread):
     """Thread chargé simplement d'afficher une lettre dans la console."""
 
     def __init__(self, MOT_DOUX, cheminVideo, cheminNpy):
-        self.c = True
-        self.arret = False
-        self.List = []
+        self.arret = True
         self.ListPoint = []
         self.frame_count = 0
         self.MOT_DOUX = MOT_DOUX
         self.cheminVideo = cheminVideo
+        self.cap = cv2.VideoCapture(self.cheminVideo)
+        self.Taille = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self.npy = np.load(cheminNpy, allow_pickle=True)
         Thread.__init__(self)
 
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
-        cap = cv2.VideoCapture(self.cheminVideo)
 
-        if (cap.isOpened() == False):
+
+        if (self.cap.isOpened() == False):
             print("Error opening video stream or file")
+        i = 0
 
-        while(cap.isOpened() and self.c == True):
-            ret, frame = cap.read()
+        while(self.cap.isOpened() and self.arret == True):
+            ret, frame = self.cap.read()
             if ret == True:
-                self.List.append(frame.copy())
-                self.ListPoint.append(self.npy[self.frame_count])
-                self.frame_count += 1
-                time.sleep(.025)
+                self.ListPoint.append([frame.copy(),self.npy[i]])
+                i += 1
             else:
                 break
-
-        if self.c:
-            self.run()
-        else:
-            self.stopthread()
+        self.Taille = i
+        self.stopthread()
 
     def stopthread(self):
-        self.arret = True
+        self.arret = False

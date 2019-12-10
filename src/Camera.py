@@ -10,15 +10,13 @@ import cv2
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
-
 class camera(Thread):
 
     """Thread chargé simplement d'afficher une lettre dans la console."""
 
     def __init__(self, args, sess, model_cfg, model_outputs):
-        self.List = []
         self.ListPoint = []
-        self.arret = False
+        self.arret = True
         self.frame_count = 0
         self.cap = cv2.VideoCapture(args.cam_id)
         self.cap.set(3, args.cam_width)
@@ -30,12 +28,11 @@ class camera(Thread):
         self.sess = sess
         self.hotpoints = ['leftWrist', 'rightWrist', 'leftShoulder',
                           'rightShoulder', 'leftKnee', 'rightKnee']
-        self.c = True
         Thread.__init__(self)
 
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
-        while self.c == True:
+        while self.arret == True:
             input_image, display_image, output_scale = posenet.read_cap(
                 self.cap, scale_factor=self.args.scale_factor, output_stride=self.output_stride)
 
@@ -53,27 +50,7 @@ class camera(Thread):
                 max_pose_detections=1,
                 min_pose_score=0)
 
-            newPose = []
-            for pi in range(len(pose_scores)):
-                if pose_scores[pi] == 0.:
-                    break
-                for ki, (s, c) in enumerate(zip(keypoint_scores[pi, :], keypoint_coords[pi, :, :])):
-                    if posenet.PART_NAMES[ki] in self.hotpoints:
-                        newPose.append([posenet.PART_NAMES[ki], c])
-                if pi == 0:
-                    self.ListPoint.append(newPose)
-
-            keypoint_coords *= output_scale
-
-            overlay_image = posenet.draw_skel_and_kp(
-                display_image, pose_scores, keypoint_scores, keypoint_coords,
-                min_pose_score=0, min_part_score=0)
-            overlay_image = cv2.flip(overlay_image, 1)
-
-            self.List.append(overlay_image.copy())
-            self.frame_count += 1
-            if not self.c:
-                self.stopthread()
+            self.ListPoint.append([pose_scores[0], keypoint_coords]);
 
     def stopthread(self):
-        self.arret = True
+        self.arret = False
