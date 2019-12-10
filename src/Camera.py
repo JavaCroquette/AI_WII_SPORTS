@@ -33,7 +33,6 @@ class camera(Thread):
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
         while self.arret == True:
-
             input_image, display_image, output_scale = posenet.read_cap(
                 self.cap, scale_factor=self.args.scale_factor, output_stride=self.output_stride)
 
@@ -50,15 +49,8 @@ class camera(Thread):
                 output_stride=self.output_stride,
                 max_pose_detections=1,
                 min_pose_score=0)
-            newPose = []
 
-            for pi in range(len(pose_scores)): #si plusieur personne
-                if pose_scores[pi] == 0.:
-                    break
-                for ki, (s, c) in enumerate(zip(keypoint_scores[pi, :], keypoint_coords[pi, :, :])):
-                    if posenet.PART_NAMES[ki] in self.hotpoints:
-                        newPose.append([posenet.PART_NAMES[ki], c])
-            self.ListPoint.append([newPose,pose_scores, keypoint_scores, keypoint_coords]);
+            self.ListPoint.append([pose_scores[0], keypoint_coords]);
 
     def stopthread(self):
         self.arret = False
