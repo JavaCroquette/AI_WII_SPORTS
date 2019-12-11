@@ -21,13 +21,13 @@ parser.add_argument('--scale_factor', type=float, default=1)# laissé à 1
 parser.add_argument('--file', type=str, default=None,help="Optionally use a video file instead of a live camera")
 args = parser.parse_args()
 #==============================================================================#
-MOT_DOUX = ["Tres Bien","Bien","Assez bien","Courage"]
+MOT_DOUX = ["Excellent","Bien","Assez bien","Courage"]
 #==============================================================================#
 good = cv2.imread('img/good.png')
 bad = cv2.imread('img/bad.png')
 verygood = cv2.imread('img/verygood.png')
 courage = cv2.imread('img/courage.png')
-IMAGE = [verygood,good,bad,courage]
+IMAGE = [verygood,good,bad,bad]
 #==============================================================================#
 def Centremassev1(a,b,c,d):
     p = [a,b,c,d]
@@ -96,7 +96,7 @@ def main():
     sess = tf.Session()
     model_cfg, model_outputs = posenet.load_model(args.model, sess)
     Camera_thread = camera(args, sess, model_cfg, model_outputs)
-    Video_thread = video(MOT_DOUX, './Exercice1/video2.mp4', './Exercice1/video.npy')
+    Video_thread = video(MOT_DOUX, './Exercice2/Exercice2.mp4', './Exercice2/video2.npy')
 #==============================================================================#
     Camera = None
     data = None
@@ -109,6 +109,7 @@ def main():
     graph = []
     fig = plt.figure(figsize=(8,2), dpi=80)
     listSum = []
+    sum = 0
 #==============================================================================#
     Camera_thread.start()
     Video_thread.start()
@@ -131,40 +132,44 @@ def main():
         if Video is not None and Camera is not None:
             if check:
                 print("Camera : " + str(Camera_thread.frame_count)+" -- Video : " + str(Video_thread.frame_count))
-                sum = 0
                 if Camera > 0:
                     for p in range(0, len(CameraPoint)):
                         sum = sum + abs(CameraPoint[p][0] - VideoPoint[p][0])
                         sum = sum + abs(CameraPoint[p][1] - VideoPoint[p][1])
                 else:
-                    sum = 17
-                listSum.append(sum)
+                    print("...")
+                    sum = sum + 17*2
+                if (Camera_thread.frame_count)%10 == 0:
+                    sum = sum / 10
+                    listSum.append(sum)
+                    if sum < 3:
+                        i = 0
+                    elif sum < 5:
+                        i = 1
+                    elif sum < 7:
+                        i = 2
+                    else:
+                        i = 3
+                    sum = 0
                 check = False
-                if sum < 2:
-                    i = 0
-                elif sum < 4:
-                    i = 1
-                elif sum < 6:
-                    i = 2
-                else:
-                    i = 3
             else:
                 print("Camera : " + str(Camera_thread.frame_count)+" == Video : " + str(Video_thread.frame_count))
 #==============================================================================#
-            cv2.putText(Video, str(MOT_DOUX[i]), (100, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
-            cv2.putText(Video, str(round(sum,2)), (100, 200),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
-            if (Camera_thread.frame_count-1)%5 == 0:
+            if (Camera_thread.frame_count)%10 == 0:
                 plt.cla()
-                plt.ylim(0,17)
+                plt.ylim(0,17*2+1)
                 canvas = FigureCanvas(fig)
-                plt.plot(range(0,Camera_thread.frame_count), listSum)
+                plt.plot(range(0, len(listSum)), listSum)
                 canvas.draw()
                 data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
                 data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-            Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
+            if data is not None:
+                Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
+                cv2.putText(Video, str(MOT_DOUX[i]), (100, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+                cv2.putText(Video, str("Marge d'erreurs:")+str(round(listSum[len(listSum)-1],2)), (50, 200),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
 #==============================================================================#
-            img = IMAGE[i]
-            Video[250:img.shape[0]+250, img.shape[1]+100 -img.shape[1]:img.shape[1]+100] = img
+                img = IMAGE[i]
+                Video[250:img.shape[0]+250, img.shape[1]+100 -img.shape[1]:img.shape[1]+100] = img
 #==============================================================================#
             Video[Video.shape[0]-500:Video.shape[0],0:500] = [0,0,0]
 #==============================================================================#
@@ -205,8 +210,7 @@ def main():
     for i in listSum:
         b = b + i
     print(b)
-    print(Video_thread.frame_count*5)
-    print(" !=! "+str(b / (Video_thread.frame_count*6)*100)+str(" %")+" !=! ")
+    print(" !=! "+str(b / (Video_thread.frame_count*(17)/10)*100)+str(" %")+" !=! ")
 
 if __name__ == "__main__":
     main()
