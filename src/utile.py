@@ -13,12 +13,16 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
-def draw(Point,Video,color):
+def draw(Point,Video,color,postion):
     cv_keypoints = []
     Liste = []
     for y in range(0, len(Point)):
-        cv_keypoints.append(cv2.KeyPoint( Point[y][1]*500, Point[y][0]*500+Video.shape[0]-500, 5))
-        Liste.append( [int(Point[y][1]*500), int(Point[y][0]*500+Video.shape[0]-500)])
+        if postion:
+            cv_keypoints.append(cv2.KeyPoint( Point[y][1]*250, Point[y][0]*500+Video.shape[0]-500, 5))
+            Liste.append( [int(Point[y][1]*250), int(Point[y][0]*500+Video.shape[0]-500)])
+        else:
+            cv_keypoints.append(cv2.KeyPoint( 250+Point[y][1]*250, Point[y][0]*500+Video.shape[0]-500, 5))
+            Liste.append( [int(250+Point[y][1]*250), int(Point[y][0]*500+Video.shape[0]-500)])
     draw_squeleton(Video, Liste, color)
     Video = cv2.drawKeypoints(Video, cv_keypoints, outImage=np.array([]), color=(color[0],color[1],color[2]), flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     return Video
@@ -76,31 +80,16 @@ def Patron(Liste, Video):
         B = [Xmax, Ymax]
         C = [Xmin, Ymin]
         D = [Xmax, Ymin]
-        AB = math.sqrt((B[0] - A[0]) * (B[0] - A[0]) +
-                       (B[1] - A[1]) * (B[1] - A[1]))
-        AC = math.sqrt((C[0] - A[0]) * (C[0] - A[0]) +
-                       (C[1] - A[1]) * (C[1] - A[1]))
-        milieu = Centremassev1(A, B, C, D)
+        AB = Distance(A,B)
+        AC = Distance(A,C)
         for i in range(0, len(Liste)):
-            Liste[i] -= milieu
-            Liste[i][0] = Liste[i][0]/(1.05*AB)+0.5
+            Liste[i] -= C
+            Liste[i][0] = Liste[i][0]/(AB)
             if Video:
-                Liste[i][1] = Liste[i][1]/(2.1*AC)+0.5
+                Liste[i][1] = Liste[i][1]/(AC)
             else:
-                Liste[i][1] = 1-(Liste[i][1]/(2.1*AC)+0.5)
+                Liste[i][1] = 1-(Liste[i][1]/(AC))
         return Liste
-
-def Centremassev1(a, b, c, d):
-    p = [a, b, c, d]
-    n = len(p)
-    x = 0
-    y = 0
-    for i in p:
-        x = i[0]+x
-        y = i[1]+y
-    xG = x/n
-    yG = y/n
-    return [xG, yG]
 
 def Sqr(a):
     return a*a

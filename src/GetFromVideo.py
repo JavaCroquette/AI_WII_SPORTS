@@ -41,8 +41,8 @@ def main():
                 displacement_fwd_result.squeeze(axis=0),
                 displacement_bwd_result.squeeze(axis=0),
                 output_stride=output_stride,
-                max_pose_detections=10,
-                min_pose_score=0.15)
+                max_pose_detections=1,
+                min_pose_score=0.30)    
             newPose = []
             for pi in range(len(pose_scores)):
                 if pose_scores[pi] == 0.:

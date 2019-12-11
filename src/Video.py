@@ -21,8 +21,8 @@ class video(Thread):
         self.MOT_DOUX = MOT_DOUX
         self.cheminVideo = cheminVideo
         self.cap = cv2.VideoCapture(self.cheminVideo)
-        self.Taille = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self.npy = np.load(cheminNpy, allow_pickle=True)
+        self.Taille = len(self.npy)
         Thread.__init__(self)
 
     def run(self):
@@ -40,7 +40,6 @@ class video(Thread):
                 i += 1
             else:
                 break
-        self.Taille = i
         self.stopthread()
 
     def stopthread(self):

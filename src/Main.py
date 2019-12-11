@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
+
+#==============================================================================#
+MIN = 0.01
 #==============================================================================#
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=int, default=101)
@@ -36,7 +39,7 @@ def main():
     sess = tf.Session()
     model_cfg, model_outputs = posenet.load_model(args.model, sess)
     Camera_thread = camera(args, sess, model_cfg, model_outputs)
-    Video_thread = video(MOT_DOUX, './Exercice2/Exercice2.mp4', './Exercice2/video2.npy')
+    Video_thread = video(MOT_DOUX, './Exercice1/Exercice1.mp4', './Exercice1/video.npy')
 #==============================================================================#
     Camera = None
     data = None
@@ -45,7 +48,7 @@ def main():
     CameraPoint = None
     rand = 0
     check = False
-    i = 4
+    i = 3
     graph = []
     fig = plt.figure(figsize=(8, 2), dpi=80)
     listSum = []
@@ -59,12 +62,12 @@ def main():
             Camera = Camera_thread.ListPoint[0][0]
             CameraPoint = utile.Patron(Camera_thread.ListPoint[0][1][0], False)
             del Camera_thread.ListPoint[0]
-            if Camera > 0:
+            if Camera > MIN:
                 Camera_thread.frame_count += 1
             check = True
 
         if len(Video_thread.ListPoint) != 0 and Camera is not None:# " " " video
-            if Camera > 0:
+            if Camera > MIN:
                 Video = Video_thread.ListPoint[0][0]
                 VideoPoint = Video_thread.ListPoint[0][1]
                 del Video_thread.ListPoint[0]
@@ -74,19 +77,19 @@ def main():
         if Video is not None:#On check si il y en a deux
             if check:
                 print("Camera : " + str(Camera_thread.frame_count)+" -- Video : " + str(Video_thread.frame_count))
-                if Camera > 0:
+                if Camera > MIN:
                     for p in range(0, len(CameraPoint)):
-                        sum = sum + utile.Distance(CameraPoint[p],VideoPoint[p]) / (sqrt(2)*17)#Normalisation
+                        sum = sum + (utile.Distance(CameraPoint[p],VideoPoint[p])/(sqrt(2)*17))#Normalisation
                 else:
                     sum = sum + 1
                 if (Camera_thread.frame_count)%10 == 0:
                     sum = sum / 10
                     listSum.append(sum)
-                    if sum < 0.1:
+                    if sum-0.1 < 0.1:
                         i = 0
-                    elif sum < 0.2:
+                    elif sum-0.1 < 0.2:
                         i = 1
-                    elif sum < 0.3:
+                    elif sum-0.1 < 0.3:
                         i = 2
                     else:
                         i = 3
@@ -114,9 +117,9 @@ def main():
 #==============================================================================#
             Video[Video.shape[0]-500:Video.shape[0], 0:500] = [0, 0, 0]
 #==============================================================================#
-            Video = utile.draw(VideoPoint,Video,[0, 255, 255])
+            Video = utile.draw(VideoPoint,Video,[0, 255, 255],True)
             if Camera > 0:
-                Video = utile.draw(CameraPoint,Video,[255, 255, 0])
+                Video = utile.draw(CameraPoint,Video,[255, 255, 0],False)
             else:#Si la personne sort du cadre de la caméra
                 Video[:,:] = [100,100,100]
                 cv2.putText(Video, str("REVENEZ DEVANT LA CAMERA"), (50, 500),cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
