@@ -1,12 +1,14 @@
 import numpy as np
 from Video import video
 from Camera import camera
+import utile
 import random
 import screeninfo
 import posenet
 import argparse
 import cv2
 import math
+from math import sqrt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tensorflow.compat.v1 as tf
@@ -14,113 +16,22 @@ tf.disable_v2_behavior()
 #==============================================================================#
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=int, default=101)
-parser.add_argument('--cam_id', type=int, default=0)
-# ne peux pas être inférieur à 640
-parser.add_argument('--cam_width', type=int, default=640)
-# ne peux pas être inférieur à 480
+parser.add_argument('--cam_id', type=int, default=0)# > à 640
+parser.add_argument('--cam_width', type=int, default=640)# > à 480
 parser.add_argument('--cam_height', type=int, default=480)
 parser.add_argument('--scale_factor', type=float, default=1)  # laissé à 1
-parser.add_argument('--file', type=str, default=None,
-                    help="Optionally use a video file instead of a live camera")
+parser.add_argument('--file', type=str, default=None, help="Optionally use a video file instead of a live camera")
 args = parser.parse_args()
 #==============================================================================#
 MOT_DOUX = ["Tres Bien", "Bien", "Assez bien", "Courage"]
 #==============================================================================#
-good = cv2.imread('img/good.png')
-bad = cv2.imread('img/bad.png')
-verygood = cv2.imread('img/verygood.png')
-courage = cv2.imread('img/courage.png')
-IMAGE = [verygood, good, bad, courage]
-#==============================================================================#
-
-
-def Centremassev1(a, b, c, d):
-    p = [a, b, c, d]
-    n = len(p)
-    x = 0
-    y = 0
-    for i in p:
-        x = i[0]+x
-        y = i[1]+y
-    xG = x/n
-    yG = y/n
-    return [xG, yG]
-#==============================================================================#
-
-
-def Patron(Liste, Video):
-    if not len(Liste) == 0:
-        # TODO si quelqu'un arrive a faire sans les liste x)
-        X = []
-        Y = []
-        for i in range(0, len(Liste)):
-            X.append(Liste[i][0])
-            Y.append(Liste[i][1])
-        Xmax = max(X)
-        Ymax = max(Y)
-        Xmin = min(X)
-        Ymin = min(Y)
-        A = [Xmin, Ymax]
-        B = [Xmax, Ymax]
-        C = [Xmin, Ymin]
-        D = [Xmax, Ymin]
-        AB = math.sqrt((B[0] - A[0]) * (B[0] - A[0]) +
-                       (B[1] - A[1]) * (B[1] - A[1]))
-        AC = math.sqrt((C[0] - A[0]) * (C[0] - A[0]) +
-                       (C[1] - A[1]) * (C[1] - A[1]))
-        milieu = Centremassev1(A, B, C, D)
-        for i in range(0, len(Liste)):
-            Liste[i] -= milieu
-            Liste[i][0] = Liste[i][0]/(1.05*AB)+0.5
-            if Video:
-                Liste[i][1] = Liste[i][1]/(2.1*AC)+0.5
-            else:
-                Liste[i][1] = 1-(Liste[i][1]/(2.1*AC)+0.5)
-        return Liste
-#==============================================================================#
-
-
-def draw_squeleton(image, keypoints, color):
-    middle = (int((keypoints[6][0] - keypoints[5][0]) / 2 + keypoints[5][0]),
-              int((keypoints[6][1] - keypoints[5][1]) / 2 + keypoints[5][1]))
-    cv2.line(image, (keypoints[5][0], keypoints[5][1]),
-             (keypoints[6][0], keypoints[6][1]), color, 2)
-    cv2.line(image, (keypoints[5][0], keypoints[5][1]),
-             (keypoints[7][0], keypoints[7][1]), color, 2)
-    cv2.line(image, (keypoints[7][0], keypoints[7][1]),
-             (keypoints[9][0], keypoints[9][1]), color, 2)
-    cv2.line(image, (keypoints[6][0], keypoints[6][1]),
-             (keypoints[8][0], keypoints[8][1]), color, 2)
-    cv2.line(image, (keypoints[8][0], keypoints[8][1]),
-             (keypoints[10][0], keypoints[10][1]), color, 2)
-    cv2.line(image, (keypoints[5][0], keypoints[5][1]),
-             (keypoints[11][0], keypoints[11][1]), color, 2)
-    cv2.line(image, (keypoints[6][0], keypoints[6][1]),
-             (keypoints[12][0], keypoints[12][1]), color, 2)
-    cv2.line(image, (keypoints[11][0], keypoints[11][1]),
-             (keypoints[13][0], keypoints[13][1]), color, 2)
-    cv2.line(image, (keypoints[13][0], keypoints[13][1]),
-             (keypoints[15][0], keypoints[15][1]), color, 2)
-    cv2.line(image, (keypoints[12][0], keypoints[12][1]),
-             (keypoints[14][0], keypoints[14][1]), color, 2)
-    cv2.line(image, (keypoints[14][0], keypoints[14][1]),
-             (keypoints[16][0], keypoints[16][1]), color, 2)
-    cv2.line(image, (keypoints[11][0], keypoints[11][1]),
-             (keypoints[12][0], keypoints[12][1]), color, 2)
-    cv2.line(image, middle, (keypoints[0][0], keypoints[0][1]), color, 2)
-    cv2.line(image, (keypoints[0][0], keypoints[0][1]),
-             (keypoints[1][0], keypoints[1][1]), color, 2)
-    cv2.line(image, (keypoints[0][0], keypoints[0][1]),
-             (keypoints[2][0], keypoints[2][1]), color, 2)
-    cv2.line(image, (keypoints[1][0], keypoints[1][1]),
-             (keypoints[3][0], keypoints[3][1]), color, 2)
-    cv2.line(image, (keypoints[2][0], keypoints[2][1]),
-             (keypoints[4][0], keypoints[4][1]), color, 2)
+IMAGE = [cv2.imread('img/verygood.png'),
+         cv2.imread('img/good.png'),
+         cv2.imread('img/bad.png'),
+         cv2.imread('img/courage.png']
 #==============================================================================#
 #=============================== MAIN DU PROGRAMME ============================#
 #==============================================================================#
-
-
 def main():
     sess = tf.Session()
     model_cfg, model_outputs = posenet.load_model(args.model, sess)
@@ -144,39 +55,38 @@ def main():
     Video_thread.start()
 #==============================================================================#
     while True:
-        if len(Camera_thread.ListPoint) != 0:
-            # On check si il y a des cordonnées
+        if len(Camera_thread.ListPoint) != 0:#On check si on a une donnée camera
             Camera = Camera_thread.ListPoint[0][0]
-            CameraPoint = Patron(Camera_thread.ListPoint[0][1][0], False)
+            CameraPoint = utile.Patron(Camera_thread.ListPoint[0][1][0], False)
             del Camera_thread.ListPoint[0]
-            Camera_thread.frame_count += 1
+            if Camera > 0:
+                Camera_thread.frame_count += 1
             check = True
 
-        if len(Video_thread.ListPoint) != 0 and Camera is not None:
-            Video = Video_thread.ListPoint[0][0]
-            VideoPoint = Video_thread.ListPoint[0][1]
-            del Video_thread.ListPoint[0]
-            VideoPoint = Patron(VideoPoint[:, 1], True)
-            Video_thread.frame_count += 1
+        if len(Video_thread.ListPoint) != 0 and Camera is not None:# " " " video
+            if Camera > 0:
+                Video = Video_thread.ListPoint[0][0]
+                VideoPoint = Video_thread.ListPoint[0][1]
+                del Video_thread.ListPoint[0]
+                VideoPoint = utile.Patron(VideoPoint[:, 1], True)
+                Video_thread.frame_count += 1
 
-        if Video is not None and Camera is not None:
+        if Video is not None:#On check si il y en a deux
             if check:
                 print("Camera : " + str(Camera_thread.frame_count)+" -- Video : " + str(Video_thread.frame_count))
                 if Camera > 0:
                     for p in range(0, len(CameraPoint)):
-                        sum = sum + abs(CameraPoint[p][0] - VideoPoint[p][0])
-                        sum = sum + abs(CameraPoint[p][1] - VideoPoint[p][1])
+                        sum = sum + utile.Distance(CameraPoint[p],VideoPoint[p]) / (sqrt(2)*17)#Normalisation
                 else:
-                    print("...")
-                    sum = sum + 17*2
+                    sum = sum + 1
                 if (Camera_thread.frame_count)%10 == 0:
                     sum = sum / 10
                     listSum.append(sum)
-                    if sum < 3:
+                    if sum < 0.1:
                         i = 0
-                    elif sum < 5:
+                    elif sum < 0.2:
                         i = 1
-                    elif sum < 7:
+                    elif sum < 0.3:
                         i = 2
                     else:
                         i = 3
@@ -188,7 +98,7 @@ def main():
 #==============================================================================#
             if (Camera_thread.frame_count)%10 == 0:
                 plt.cla()
-                plt.ylim(0,17*2+1)
+                plt.ylim(0,1)
                 canvas = FigureCanvas(fig)
                 plt.plot(range(0, len(listSum)), listSum)
                 canvas.draw()
@@ -196,40 +106,23 @@ def main():
                 data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
             if data is not None:
                 Video[0:data.shape[0], Video.shape[1] - data.shape[1]:Video.shape[1]] = data
-                cv2.putText(Video, str(MOT_DOUX[i]), (100, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
-                cv2.putText(Video, str("Marge d'erreurs:")+str(round(listSum[len(listSum)-1],2)), (50, 200),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+                cv2.putText(Video, str(MOT_DOUX[i]), (50, 200),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+                cv2.putText(Video, str("Marge d'erreurs:")+str(round(listSum[len(listSum)-1],2)), (50, 100),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
 #==============================================================================#
                 img = IMAGE[i]
                 Video[250:img.shape[0]+250, img.shape[1]+100 -img.shape[1]:img.shape[1]+100] = img
 #==============================================================================#
             Video[Video.shape[0]-500:Video.shape[0], 0:500] = [0, 0, 0]
 #==============================================================================#
-            cv_keypoints = []
-            Liste = []
-            for y in range(0, len(VideoPoint)):
-                cv_keypoints.append(cv2.KeyPoint(
-                    VideoPoint[y][1]*500, VideoPoint[y][0]*500+Video.shape[0]-500, 10))
-                Liste.append([int(VideoPoint[y][1]*500),
-                              int(VideoPoint[y][0]*500)+Video.shape[0]-500])
-            Video = cv2.drawKeypoints(Video, cv_keypoints, outImage=np.array([]), color=(
-                0, 255, 255), flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-            draw_squeleton(Video, Liste, [0, 255, 255])
-#==============================================================================#
+            Video = utile.draw(VideoPoint,Video,[0, 255, 255])
             if Camera > 0:
-                cv_keypoints = []
-                Liste = []
-                for y in range(0, len(CameraPoint)):
-                    cv_keypoints.append(cv2.KeyPoint(
-                        CameraPoint[y][1]*500, CameraPoint[y][0]*500+Video.shape[0]-500, 10))
-                    Liste.append(
-                        [int(CameraPoint[y][1]*500), int(CameraPoint[y][0]*500+Video.shape[0]-500)])
-                Video = cv2.drawKeypoints(Video, cv_keypoints, outImage=np.array([]), color=(
-                    255, 255, 0), flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-                draw_squeleton(Video, Liste, [255, 255, 0])
+                Video = utile.draw(CameraPoint,Video,[255, 255, 0])
+            else:#Si la personne sort du cadre de la caméra
+                Video[:,:] = [100,100,100]
+                cv2.putText(Video, str("REVENEZ DEVANT LA CAMERA"), (50, 500),cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
 #==============================================================================#
             cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
-            cv2.setWindowProperty(
-                'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video', Video)
 #==============================================================================#
         if Video_thread.Taille is not None:
@@ -247,8 +140,7 @@ def main():
     b = 0
     for i in listSum:
         b = b + i
-    print(b)
-    print(" !=! "+str(b / (Video_thread.frame_count*(17)/10)*100)+str(" %")+" !=! ")
+    print(" !=! "+str(b / (int(Video_thread.frame_count/10))*100)+str(" %")+" !=! ")
 
 
 if __name__ == "__main__":
