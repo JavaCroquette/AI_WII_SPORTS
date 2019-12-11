@@ -19,7 +19,7 @@ MIN = 0.01
 #==============================================================================#
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=int, default=101)
-parser.add_argument('--cam_id', type=int, default=0)# > à 640
+parser.add_argument('--cam_id', type=int, default=1)# > à 640
 parser.add_argument('--cam_width', type=int, default=640)# > à 480
 parser.add_argument('--cam_height', type=int, default=480)
 parser.add_argument('--scale_factor', type=float, default=1)  # laissé à 1
@@ -39,7 +39,7 @@ def main():
     sess = tf.Session()
     model_cfg, model_outputs = posenet.load_model(args.model, sess)
     Camera_thread = camera(args, sess, model_cfg, model_outputs)
-    Video_thread = video(MOT_DOUX, './Exercice1/Exercice1.mp4', './Exercice1/video.npy')
+    Video_thread = video(MOT_DOUX, './Exercice3/Exercice3.mp4', './Exercice3/video3.npy')
 #==============================================================================#
     Camera = None
     data = None
@@ -78,18 +78,18 @@ def main():
             if check:
                 print("Camera : " + str(Camera_thread.frame_count)+" -- Video : " + str(Video_thread.frame_count))
                 if Camera > MIN:
-                    for p in range(0, len(CameraPoint)):
-                        sum = sum + (utile.Distance(CameraPoint[p],VideoPoint[p])/(sqrt(2)*17))#Normalisation
+                    for p in range(5, len(CameraPoint)):
+                        sum = sum + (utile.Distance(CameraPoint[p],VideoPoint[p])/(sqrt(2)*12))#Normalisation
                 else:
                     sum = sum + 1
                 if (Camera_thread.frame_count)%10 == 0:
                     sum = sum / 10
                     listSum.append(sum)
-                    if sum-0.1 < 0.1:
+                    if sum < 0.225:
                         i = 0
-                    elif sum-0.1 < 0.2:
+                    elif sum < 0.275:
                         i = 1
-                    elif sum-0.1 < 0.3:
+                    elif sum < 0.30:
                         i = 2
                     else:
                         i = 3
