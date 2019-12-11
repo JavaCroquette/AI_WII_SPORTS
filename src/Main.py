@@ -28,7 +28,7 @@ MOT_DOUX = ["Tres Bien", "Bien", "Assez bien", "Courage"]
 IMAGE = [cv2.imread('img/verygood.png'),
          cv2.imread('img/good.png'),
          cv2.imread('img/bad.png'),
-         cv2.imread('img/courage.png']
+         cv2.imread('img/courage.png')]
 #==============================================================================#
 #=============================== MAIN DU PROGRAMME ============================#
 #==============================================================================#
