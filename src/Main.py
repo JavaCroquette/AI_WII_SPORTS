@@ -22,7 +22,7 @@ args = parser.parse_args()
 #==============================================================================#
 
 
-path = dirname(realpath(__file__)).replace('/src', '/videos')
+path = dirname(realpath(__file__)).replace('src', 'videos')
 
 
 def start_session(video, model):
