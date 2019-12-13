@@ -252,6 +252,7 @@ def main():
     print(b)
     print(Video_thread.frame_count*5)
     print(" !=! "+str(b / (Video_thread.frame_count*6)*100)+str(" %")+" !=! ")
+    return
 
 
 if __name__ == "__main__":
