@@ -4,7 +4,7 @@ import numpy as np
 import PIL
 from PIL import ImageTk
 from ctypes import c_uint8
-# from src.Main import main
+from Main import main
 from tkinter import *
 from tkinter import ttk
 from os import listdir, stat
@@ -57,12 +57,9 @@ class Window:
                           message, loop)
 
     def start_video_process(self):
-        print(self.tree.selection())
-    """def start_video_process(self):
-        self.video_process = mp.Process(
-            target=main, args=(self.sharedVideoArray, resolution))
+        self.video_process = mp.Process(target=main)
         self.video_process.start()
-        # self.video_process.join(timeout=1)"""
+        # self.video_process.join(timeout=1)
 
     def list_video_files(self):
         # return list with video files names who have a .npy associated
