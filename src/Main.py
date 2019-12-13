@@ -19,7 +19,7 @@ MIN = 0.01
 #==============================================================================#
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=int, default=101)
-parser.add_argument('--cam_id', type=int, default=1)# > à 640
+parser.add_argument('--cam_id', type=int, default=0)# > à 640
 parser.add_argument('--cam_width', type=int, default=640)# > à 480
 parser.add_argument('--cam_height', type=int, default=480)
 parser.add_argument('--scale_factor', type=float, default=1)  # laissé à 1
@@ -39,7 +39,7 @@ def main():
     sess = tf.Session()
     model_cfg, model_outputs = posenet.load_model(args.model, sess)
     Camera_thread = camera(args, sess, model_cfg, model_outputs)
-    Video_thread = video(MOT_DOUX, './Exercice3/Exercice3.mp4', './Exercice3/video3.npy')
+    Video_thread = video(MOT_DOUX, './Exercice1/Exercice1.mp4', './Exercice1/video.npy')
 #==============================================================================#
     Camera = None
     data = None
@@ -78,8 +78,9 @@ def main():
             if check:
                 print("Camera : " + str(Camera_thread.frame_count)+" -- Video : " + str(Video_thread.frame_count))
                 if Camera > MIN:
-                    for p in range(5, len(CameraPoint)):
-                        sum = sum + (utile.Distance(CameraPoint[p],VideoPoint[p])/(sqrt(2)*12))#Normalisation
+                    Comparatif = [5,6,7,8,9,10,11,12,13,14,15,16]
+                    for p in Comparatif:
+                        sum = sum + (utile.Distance(CameraPoint[p],VideoPoint[p])/(sqrt(2)*len(Comparatif)))#Normalisation
                 else:
                     sum = sum + 1
                 if (Camera_thread.frame_count)%10 == 0:
