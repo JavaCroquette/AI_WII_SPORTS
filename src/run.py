@@ -12,19 +12,13 @@ from os.path import isfile, join
 import multiprocessing as mp
 mp.set_start_method('spawn', True)
 
-resolution = (480, 720)
-
-path = './videos'
+path = '../videos'
 
 
 class Window:
     def __init__(self):
-        self.sharedVideoArray = mp.RawArray(
-            c_uint8, resolution[0]*resolution[1]*3)
-        self.npVideoArray = np.frombuffer(
-            self.sharedVideoArray, dtype='uint8').reshape(resolution+(3,))
         self.window = Tk()
-        self.window.geometry("1220x960")
+        self.window.geometry("270x360")
         self.window.title("Basic Fat")
 
         """files = self.list_video_files()
@@ -38,6 +32,10 @@ class Window:
                 pannels, text=files[i].replace('.mp4', ''), anchor=CENTER))
             pannels[i] = p"""
         self.window_video_list()
+
+        launchButton = Button(self.window, text="Begin",
+                              command=self.start_video_process)
+        launchButton.pack(side=BOTTOM)
         # self.start_video_process()
         # self.window.after(20, self.updateImage)
         # self.window.after(2000, self.console_log, "test after fenetre", 2000)
@@ -46,18 +44,20 @@ class Window:
 
     def window_video_list(self):
         files = self.list_video_files()
-        tree = ttk.Treeview(self.window)
-        tree.column("#0", minwidth=270, width=270, stretch=NO)
-        tree.heading("#0", text="Name", anchor=W)
+        self.tree = ttk.Treeview(self.window)
+        self.tree.column("#0", minwidth=270)
+        self.tree.heading("#0", text="Name", anchor=W)
         for f in files:
-            tree.insert("", "end", f, text=f)
-        tree.pack(side=TOP, fill=X)
+            self.tree.insert("", "end", f, text=f)
+        self.tree.pack(side=TOP, fill=X)
 
     def console_log_loop(self, message, loop):
         print(colored(message, 'green'))
         self.window.after(loop, self.console_log_loop,
                           message, loop)
 
+    def start_video_process(self):
+        print(self.tree.selection())
     """def start_video_process(self):
         self.video_process = mp.Process(
             target=main, args=(self.sharedVideoArray, resolution))
