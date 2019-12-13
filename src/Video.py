@@ -36,11 +36,14 @@ class video(Thread):
         while(self.cap.isOpened() and self.arret == True):
             ret, frame = self.cap.read()
             if ret == True:
-                self.ListPoint.append([frame.copy(),self.npy[i]])
+                self.Add(frame,self.npy[i])
                 i += 1
             else:
                 break
         self.stopthread()
+
+    def Add(self,frame,tableau):
+        self.ListPoint.append([frame.copy(),tableau])
 
     def stopthread(self):
         self.arret = False

@@ -44,27 +44,31 @@ class exercice(Thread):
         self.sum = 0
         Thread.__init__(self)
 
+    def AddCamera(self):
+        if len(self.Camera_thread.ListPoint) != 0:
+            self.Camera = self.Camera_thread.ListPoint[0][0]
+            self.CameraPoint = utile.Patron(self.Camera_thread.ListPoint[0][1][0], False)
+            del self.Camera_thread.ListPoint[0]
+            if self.Camera > MIN:
+                self.Camera_thread.frame_count += 1
+            self.check = True
+
+    def AddVideo(self):
+        if len(self.Video_thread.ListPoint) != 0 and self.Camera is not None:
+            if self.Camera > MIN:
+                self.Video = self.Video_thread.ListPoint[0][0]
+                self.VideoPoint = self.Video_thread.ListPoint[0][1]
+                del self.Video_thread.ListPoint[0]
+                self.VideoPoint = utile.Patron(self.VideoPoint[:, 1], True)
+                self.Video_thread.frame_count += 1
+
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
         self.Camera_thread.start()
         self.Video_thread.start()
         while self.arret:
-            if len(self.Camera_thread.ListPoint) != 0:#On check si on a une donnée camera
-                self.Camera = self.Camera_thread.ListPoint[0][0]
-                self.CameraPoint = utile.Patron(self.Camera_thread.ListPoint[0][1][0], False)
-                del self.Camera_thread.ListPoint[0]
-                if self.Camera > MIN:
-                    self.Camera_thread.frame_count += 1
-                self.check = True
-
-            if len(self.Video_thread.ListPoint) != 0 and self.Camera is not None:# " " " video
-                if self.Camera > MIN:
-                    self.Video = self.Video_thread.ListPoint[0][0]
-                    self.VideoPoint = self.Video_thread.ListPoint[0][1]
-                    del self.Video_thread.ListPoint[0]
-                    self.VideoPoint = utile.Patron(self.VideoPoint[:, 1], True)
-                    self.Video_thread.frame_count += 1
-
+            self.AddCamera()
+            self.AddVideo()
             if self.Video is not None:#On check si il y en a deux
                 if self.check:
                     print("Camera : " + str(self.Camera_thread.frame_count)+" -- Video : " + str(self.Video_thread.frame_count))
@@ -122,8 +126,7 @@ class exercice(Thread):
     #==============================================================================#
             if self.Video_thread.Taille is not None:
                 if self.Video_thread.Taille == self.Video_thread.frame_count:
-                    self.Video_thread.stopthread()
-                    self.Camera_thread.stopthread()
+                    self.stopthread()
                     break
     #==============================================================================#
             if cv2.waitKey(25) & 0xFF == ord('q'):
@@ -133,7 +136,8 @@ class exercice(Thread):
         b = 0
         for i in self.listSum:
             b = b + i
-        print(" !=! "+str(b / (int(self.Video_thread.frame_count/10))*100)+str(" %")+" !=! ")
+        if self.Video_thread.frame_count > 10:
+            print(" !=! "+str(b / (int(self.Video_thread.frame_count/10))*100)+str(" %")+" !=! ")
 
     def stopthread(self):
         self.Video_thread.stopthread()
