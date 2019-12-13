@@ -44,6 +44,7 @@ class exercice(Thread):
         self.fig = plt.figure(figsize=(8, 2), dpi=80)
         self.listSum = []
         self.sum = 0
+        self.score = 0
         Thread.__init__(self)
 
     def AddCamera(self):
@@ -134,10 +135,14 @@ class exercice(Thread):
                             self.listSum.append(self.sum)
                             if self.sum < 0.225:
                                 self.i = 0
+                                self.score = self.score + 200
+
                             elif self.sum < 0.275:
                                 self.i = 1
+                                self.score = self.score + 100
                             elif self.sum < 0.30:
                                 self.i = 2
+                                self.score = self.score + 50
                             else:
                                 self.i = 3
                             self.sum = 0
@@ -157,8 +162,8 @@ class exercice(Thread):
                     cv2.putText(self.Video, str("Marge d'erreurs:")+str(round(self.listSum[len(
                         self.listSum)-1], 2)), (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
                     img = IMAGE[self.i]
-                    self.Video[250:img.shape[0]+250, img.shape[1] +
-                               100 - img.shape[1]:img.shape[1]+100] = img
+                    self.Video[250:img.shape[0]+250, img.shape[1]+100 -img.shape[1]:img.shape[1]+100] = img
+                    cv2.putText(self.Video, str(self.score), (400, 250),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
     #==============================================================================#
                 self.Video[self.Video.shape[0] -
                            500:self.Video.shape[0], 0:500] = [0, 0, 0]
