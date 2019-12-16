@@ -13,6 +13,7 @@ from math import sqrt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tensorflow.compat.v1 as tf
+from PIL import ImageFont, ImageDraw, Image
 tf.disable_v2_behavior()
 
 MIN = 0.01
@@ -45,6 +46,7 @@ class exercice(Thread):
         self.listSum = []
         self.sum = 0
         self.score = 0
+        self.totalscore = []
         Thread.__init__(self)
 
     def AddCamera(self):
@@ -73,6 +75,62 @@ class exercice(Thread):
         data = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
         return data.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
 
+    def Debut(self):
+        for i in range(0, 90):
+            Video = self.Video.copy()
+            font = cv2.FONT_HERSHEY_DUPLEX
+            if i < 30:
+                text = "3"
+            elif i < 60:
+                text = "2"
+            else:
+                text = "1"
+
+            #fontpath = "SuperMario256.ttf"
+            #img_pil = Image.fromarray(Video)
+            #draw = ImageDraw.Draw(img_pil)
+
+            #font = ImageFont.truetype(fontpath, int(32*(i%30)/3)+(i%30))
+            # get boundary of this text
+            #textsize = draw.textsize(text,font)[0]
+            # get coords based on boundary
+            #textX = int((Video.shape[1] - textsize) / 2)
+            #textY = int((Video.shape[0] - textsize) / 2)
+            # add text centered on image
+            #draw.text((textX, textY),  text, font = font, fill = (0, 165, 255, (i%30)*3))
+
+            #font = ImageFont.truetype(fontpath, int(32*(i%30)/3))
+            # get boundary of this text
+            #textsize = draw.textsize(text,font)[0]
+            # get coords based on boundary
+            #textX = int((Video.shape[1] - textsize) / 2)
+            #textY = int((Video.shape[0] - textsize) / 2)
+            # add text centered on 8
+            #draw.text((textX, textY),  text, font = font, fill = (0, 215, 255, (i%30)*3))
+            #Video = np.array(img_pil)
+
+
+
+            # get boundary of this text
+            textsize = cv2.getTextSize(text, font, 1+i/3 % 10, 24)[0]
+
+            # get coords based on boundary
+            textX = int((Video.shape[1] - textsize[0]) / 2)
+            textY = int((Video.shape[0] + textsize[1]) / 2)
+
+            # add text centered on image
+            cv2.putText(Video, text, (textX, textY), font, 1+i/3 %10, (0, 191, 255), 24)
+            cv2.putText(Video, text, (textX, textY), font, 1+i/3 %10, (0, 255, 255), 12)
+            cv2.imshow('Video', Video)
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                self.stopthread()
+                break
+
+    def reset(self):
+        self.Camera_thread.ListPoint[:] = []
+        self.check = False
+        self.Camera_thread.frame_count = 0
+
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
         self.Camera_thread.start()
@@ -83,36 +141,10 @@ class exercice(Thread):
                 self.AddVideo()
 
         cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty(
-            'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-        for i in range(0, 90):
-            Video = self.Video.copy()
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            if i < 30:
-                text = "3"
-            elif i < 60:
-                text = "2"
-            else:
-                text = "1"
-
-            # get boundary of this text
-            textsize = cv2.getTextSize(text, font, 1+i/3 % 10, 24)[0]
-
-            # get coords based on boundary
-            textX = int((Video.shape[1] - textsize[0]) / 2)
-            textY = int((Video.shape[0] + textsize[1]) / 2)
-
-            # add text centered on image
-            cv2.putText(Video, text, (textX, textY), font, 1+i/3 %
-                        10, (0, 191, 255), 24)
-            cv2.putText(Video, text, (textX, textY), font, 1+i/3 %
-                        10, (0, 255, 255), 12)
-            time.sleep(0.01)
-            cv2.imshow('Video', Video)
-            if cv2.waitKey(25) & 0xFF == ord('q'):
-                self.stopthread()
-                break
+        self.Debut()
+        self.reset()
 
         while self.arret:
             self.AddCamera()
@@ -133,28 +165,30 @@ class exercice(Thread):
                         if (self.Camera_thread.frame_count) % 10 == 0:
                             self.sum = self.sum / 10
                             self.listSum.append(self.sum)
-                            if self.sum < 0.225:
+                            if self.sum < 0.3:
                                 self.i = 0
-                                self.score = self.score + 200
+                                self.score = 200
 
-                            elif self.sum < 0.275:
+                            elif self.sum < 0.4:
                                 self.i = 1
-                                self.score = self.score + 100
-                            elif self.sum < 0.30:
+                                self.score = 100
+                            elif self.sum < 0.5:
                                 self.i = 2
-                                self.score = self.score + 50
+                                self.score = 50
                             else:
                                 self.i = 3
+                                self.score = 0
                             self.sum = 0
+                            self.totalscore.append(self.score)
                         self.check = False
                 else:
                     print("Camera : " + str(self.Camera_thread.frame_count) +
                           " == Video : " + str(self.Video_thread.frame_count), end="\r")
-    #==============================================================================#
+#==============================================================================#
                 if (self.Camera_thread.frame_count) % 10 == 0:
                     self.data = self.AddData()
 
-                if self.data is not None:
+                if self.data is not None and len(self.listSum) != 0:
                     self.Video[0:self.data.shape[0], self.Video.shape[1] -
                                self.data.shape[1]:self.Video.shape[1]] = self.data
                     cv2.putText(self.Video, str(
@@ -163,18 +197,21 @@ class exercice(Thread):
                         self.listSum)-1], 2)), (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
                     img = IMAGE[self.i]
                     self.Video[250:img.shape[0]+250, img.shape[1]+100 -img.shape[1]:img.shape[1]+100] = img
-                    cv2.putText(self.Video, str(self.score), (400, 250),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
-    #==============================================================================#
+#==============================================================================#
+                cv2.putText(self.Video, str(self.score), (400, 250),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+#==============================================================================#
                 self.Video[self.Video.shape[0] -
                            500:self.Video.shape[0], 0:500] = [0, 0, 0]
                 self.Video = utile.draw(
                     self.VideoPoint, self.Video, [0, 255, 255], True)
-                if self.Camera > 0:
-                    self.Video = utile.draw(
-                        self.CameraPoint, self.Video, [255, 255, 0], False)
-                else:  # Si la personne sort du cadre de la caméra
-                    self.Video[:, :] = [100, 100, 100]
-                    cv2.putText(self.Video, str("REVENEZ DEVANT LA CAMERA"),
+
+                if self.Camera is not None:
+                    if self.Camera > 0:
+                        self.Video = utile.draw(
+                            self.CameraPoint, self.Video, [255, 255, 0], False)
+                    else:  # Si la personne sort du cadre de la caméra
+                        self.Video[:, :] = [100, 100, 100]
+                        cv2.putText(self.Video, str("REVENEZ DEVANT LA CAMERA"),
                                 (50, 500), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
     #==============================================================================#
                 cv2.imshow('Video', self.Video)
@@ -195,7 +232,28 @@ class exercice(Thread):
             print(" !=! "+str(b / (int(self.Video_thread.frame_count/10))
                               * 100)+str(" %")+" !=! ")
 
+        self.fin()
+
         cv2.destroyWindow('Video')
+
+
+    def fin(self):
+        self.Video[:, :] = [200, 200, 200]
+        if len(self.totalscore) == 0:
+            self.totalscore.append([0])
+        i = 0
+        score = 0
+        while True:
+            Image = self.Video.copy()
+            if i < len(self.totalscore):
+                score += self.totalscore[i]
+                i += 1
+            cv2.putText(Image, str("Score :")+str(score),(50, 500), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
+
+            cv2.imshow('Video', Image)
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                self.stopthread()
+                break
 
     def stopthread(self):
         self.Video_thread.stopthread()
