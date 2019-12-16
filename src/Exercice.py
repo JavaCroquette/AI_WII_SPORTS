@@ -16,6 +16,9 @@ import tensorflow.compat.v1 as tf
 from PIL import ImageFont, ImageDraw, Image
 tf.disable_v2_behavior()
 
+import win32api
+
+
 MIN = 0.01
 
 MOT_DOUX = ["Tres Bien", "Bien", "Assez bien", "Courage"]
@@ -31,6 +34,7 @@ class exercice(Thread):
     """Thread chargé simplement d'afficher une lettre dans la console."""
 
     def __init__(self, sess, model_cfg, model_outputs, args, cheminV, cheminN):
+        self.clique = False
         self.arret = True
         self.Camera_thread = camera(args, sess, model_cfg, model_outputs)
         self.Video_thread = video(MOT_DOUX, cheminV, cheminN)
@@ -47,6 +51,7 @@ class exercice(Thread):
         self.sum = 0
         self.score = 0
         self.totalscore = []
+        self.erreurpourcent = 0
         Thread.__init__(self)
 
     def AddCamera(self):
@@ -60,10 +65,10 @@ class exercice(Thread):
             self.check = True
 
     def AddVideo(self):
-        self.Video = self.Video_thread.ListPoint[0][0]
-        self.VideoPoint = self.Video_thread.ListPoint[0][1]
-        del self.Video_thread.ListPoint[0]
-        self.VideoPoint = utile.Patron(self.VideoPoint[:, 1], True)
+        self.Video = self.Video_thread.ListPoint[self.Video_thread.frame_count][0]
+        if self.Video_thread.frame_count > 0:
+            self.VideoPoint = self.Video_thread.ListPoint[self.Video_thread.frame_count-1][1]
+            self.VideoPoint = utile.Patron(self.VideoPoint[:, 1], True)
         self.Video_thread.frame_count += 1
 
     def AddData(self):
@@ -74,6 +79,10 @@ class exercice(Thread):
         canvas.draw()
         data = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
         return data.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
+
+    def on_click(self,event, x, y, p1, p2):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.clique = True
 
     def Debut(self):
         for i in range(0, 90):
@@ -122,7 +131,8 @@ class exercice(Thread):
             cv2.putText(Video, text, (textX, textY), font, 1+i/3 %10, (0, 191, 255), 24)
             cv2.putText(Video, text, (textX, textY), font, 1+i/3 %10, (0, 255, 255), 12)
             cv2.imshow('Video', Video)
-            if cv2.waitKey(25) & 0xFF == ord('q'):
+
+            if (cv2.waitKey(25) & 0xFF == ord('q')) or self.clique == True:
                 self.stopthread()
                 break
 
@@ -142,7 +152,7 @@ class exercice(Thread):
 
         cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-
+        cv2.setMouseCallback('Video', self.on_click)
         self.Debut()
         self.reset()
 
@@ -165,19 +175,22 @@ class exercice(Thread):
                         if (self.Camera_thread.frame_count) % 10 == 0:
                             self.sum = self.sum / 10
                             self.listSum.append(self.sum)
-                            if self.sum < 0.3:
+                            if self.sum < 0.2:
                                 self.i = 0
                                 self.score = 200
-
-                            elif self.sum < 0.4:
+                                colortext = (0,252,124)
+                            elif self.sum < 0.3:
                                 self.i = 1
                                 self.score = 100
-                            elif self.sum < 0.5:
+                                colortext = (47,255,173)
+                            elif self.sum < 0.4:
                                 self.i = 2
                                 self.score = 50
+                                colortext = (0,215,255)
                             else:
                                 self.i = 3
                                 self.score = 0
+                                colortext = (0,140,255)
                             self.sum = 0
                             self.totalscore.append(self.score)
                         self.check = False
@@ -198,12 +211,13 @@ class exercice(Thread):
                     img = IMAGE[self.i]
                     self.Video[250:img.shape[0]+250, img.shape[1]+100 -img.shape[1]:img.shape[1]+100] = img
 #==============================================================================#
-                cv2.putText(self.Video, str(self.score), (400, 250),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+                    cv2.putText(self.Video, str("+")+str(self.score), (400, 200),cv2.FONT_HERSHEY_SIMPLEX, 2, colortext, 4)
 #==============================================================================#
                 self.Video[self.Video.shape[0] -
                            500:self.Video.shape[0], 0:500] = [0, 0, 0]
-                self.Video = utile.draw(
-                    self.VideoPoint, self.Video, [0, 255, 255], True)
+                if self.VideoPoint is not None:
+                    self.Video = utile.draw(
+                        self.VideoPoint, self.Video, [0, 255, 255], True)
 
                 if self.Camera is not None:
                     if self.Camera > 0:
@@ -218,10 +232,11 @@ class exercice(Thread):
     #==============================================================================#
             if self.Video_thread.Taille is not None:
                 if self.Video_thread.Taille == self.Video_thread.frame_count:
-                    self.stopthread()
+                    self.Video_thread.stopthread()
+                    self.Camera_thread.stopthread()
                     break
     #==============================================================================#
-            if cv2.waitKey(25) & 0xFF == ord('q'):
+            if (cv2.waitKey(25) & 0xFF == ord('q')) or self.clique == True:
                 self.stopthread()
                 break
 
@@ -229,18 +244,16 @@ class exercice(Thread):
         for i in self.listSum:
             b = b + i
         if self.Video_thread.frame_count > 10:
-            print(" !=! "+str(b / (int(self.Video_thread.frame_count/10))
-                              * 100)+str(" %")+" !=! ")
+            self.erreurpourcent = (b / (int(self.Video_thread.frame_count/10))* 100)
 
         self.fin()
-
+        self.stopthread()
         cv2.destroyWindow('Video')
-
 
     def fin(self):
         self.Video[:, :] = [200, 200, 200]
         if len(self.totalscore) == 0:
-            self.totalscore.append([0])
+            self.totalscore.append(0)
         i = 0
         score = 0
         while True:
@@ -249,9 +262,33 @@ class exercice(Thread):
                 score += self.totalscore[i]
                 i += 1
             cv2.putText(Image, str("Score :")+str(score),(50, 500), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
+            ##Note :
+            if self.erreurpourcent < 10 :
+                note = str("S")
+                colornote = (0,0,0)
+            elif self.erreurpourcent < 15:
+                note = str("A")
+                colornote = (0,0,0)
+            elif self.erreurpourcent < 20:
+                note= str("B")
+                colornote = (0,0,0)
+            elif self.erreurpourcent < 40:
+                note = str("C")
+                colornote = (0,0,0)
+            elif self.erreurpourcent < 50:
+                note = str("D")
+                colornote = (0,0,0)
+            elif self.erreurpourcent < 70:
+                note = str("E")
+                colornote = (0,0,0)
+            elif self.erreurpourcent < 100:
+                note = str("F")
+            cv2.putText(Image, str("Note : ")+note,(1000, 500), cv2.FONT_HERSHEY_SIMPLEX, 4, colornote, 12)
+            cv2.putText(Image, str("Cliquez pour retourner au menu"),(50, 1000), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 6)
 
             cv2.imshow('Video', Image)
-            if cv2.waitKey(25) & 0xFF == ord('q'):
+
+            if (cv2.waitKey(25) & 0xFF == ord('q')) or self.clique == True:
                 self.stopthread()
                 break
 
@@ -259,3 +296,4 @@ class exercice(Thread):
         self.Video_thread.stopthread()
         self.Camera_thread.stopthread()
         self.arret = False
+        self.clique = True

@@ -36,7 +36,7 @@ def start_session(video, model):
 class Window:
     def __init__(self):
         self.window = Tk()
-        self.window.geometry("270x360")
+        self.window.geometry("1920x1080")
         self.window.title("Basic Fat")
         self.window_video_list()
 
