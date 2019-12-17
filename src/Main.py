@@ -36,27 +36,31 @@ def start_session(video, model):
 class Window:
     def __init__(self):
         self.window = Tk()
-        self.window.geometry("1920x1080")
+        self.window.attributes("-fullscreen", True)
+        # self.window.geometry("270x360")
         self.window.title("Basic Fat")
         self.window_video_list()
-
-        launchButton = Button(self.window, text="Begin",
-                              command=self.start_video_process)
-        launchButton.pack(side=BOTTOM)
         self.window.mainloop()
         self.video_process.terminate()
 
     def window_video_list(self):
         files = self.list_video_files()
-        self.tree = ttk.Treeview(self.window)
-        self.tree.column("#0", minwidth=270)
-        self.tree.heading("#0", text="Name", anchor=W)
+        pannel = PanedWindow(self.window)
+        pannel.pack(expand=True, padx=20)
         for f in files:
-            self.tree.insert("", "end", f, text=f)
-        self.tree.pack(side=TOP, fill=X)
+            b = Button(text=f, padx=40, pady=50,
+                       command=lambda: self.start_video_process(f))
+            """vidcap = cv2.VideoCapture(join(path, f))
+            success, image = vidcap.read()
+            if success == False:
+                image = cv2.resize(image, (200, 200))
+                img = Image.fromarray(image)
+                img = ImageTk.PhotoImage(image=img)
+                b.config(image=img)"""
+            pannel.add(b)
 
-    def start_video_process(self):
-        videoFile = join(path, self.tree.selection()[0])
+    def start_video_process(self, video):
+        videoFile = join(path, video)
         modelFile = videoFile.replace('mp4', 'npy')
         self.video_process = mp.Process(
             target=start_session, args=(videoFile, modelFile))
