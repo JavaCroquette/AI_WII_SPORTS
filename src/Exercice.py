@@ -330,7 +330,7 @@ class exercice(Thread):
                         if i-self.countbien-self.countcourage-self.countpasmal < self.counttresbien:
                             cv2.putText(Image, str("Tres Bien : ")+str(i-self.countbien-self.countcourage-self.countpasmal),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,252,124), 4)
                         else:
-                            cv2.putText(Image, str("Tres Bien : ")+str(self.countbien),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,252,124), 4)
+                            cv2.putText(Image, str("Tres Bien : ")+str(self.counttresbien),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,252,124), 4)
             time.sleep(.05)
 
             #cv2.putText(Image, str("Bien : ")+str(self.countbien),(950, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (47,255,173), 6)
