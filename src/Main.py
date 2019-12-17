@@ -48,18 +48,19 @@ class Window:
         pannel = PanedWindow(self.window)
         pannel.pack(expand=True, padx=20)
         for f in files:
-            b = Button(text=f, padx=40, pady=50)
-            vidcap = cv2.VideoCapture(join(path, f))
+            b = Button(text=f, padx=40, pady=50,
+                       command=lambda: self.start_video_process(f))
+            """vidcap = cv2.VideoCapture(join(path, f))
             success, image = vidcap.read()
-            """if success == False:
+            if success == False:
                 image = cv2.resize(image, (200, 200))
                 img = Image.fromarray(image)
                 img = ImageTk.PhotoImage(image=img)
                 b.config(image=img)"""
             pannel.add(b)
 
-    def start_video_process(self):
-        videoFile = join(path, self.tree.selection()[0])
+    def start_video_process(self, video):
+        videoFile = join(path, video)
         modelFile = videoFile.replace('mp4', 'npy')
         self.video_process = mp.Process(
             target=start_session, args=(videoFile, modelFile))
