@@ -10,6 +10,7 @@ import cv2
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
+
 class camera(Thread):
 
     """Thread chargé simplement d'afficher une lettre dans la console."""
@@ -50,10 +51,10 @@ class camera(Thread):
                 max_pose_detections=1,
                 min_pose_score=0.2)
 
-            self.Add(pose_scores,keypoint_coords)
+            self.Add(pose_scores, keypoint_coords)
 
-    def Add(self,pose_scores,keypoint_coords):
-        self.ListPoint.append([sum(pose_scores), keypoint_coords]);
+    def Add(self, pose_scores, keypoint_coords):
+        self.ListPoint.append([sum(pose_scores), keypoint_coords])
 
     def stopthread(self):
         self.arret = False

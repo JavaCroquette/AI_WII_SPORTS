@@ -2,7 +2,7 @@ import numpy as np
 from Video import video
 from Camera import camera
 from threading import Thread
-import utils
+import utilitaries
 import screeninfo
 import posenet
 import argparse
@@ -64,7 +64,7 @@ class exercice(Thread):
         if len(self.Camera_thread.ListPoint) != 0:
             self.Camera = self.Camera_thread.ListPoint[0][0]
             if self.Camera > MIN:
-                self.CameraPoint = utils.Patron(
+                self.CameraPoint = utilitaries.Patron(
                     self.Camera_thread.ListPoint[0][1][0], False)
                 self.Camera_thread.frame_count += 1
             del self.Camera_thread.ListPoint[0]
@@ -74,12 +74,12 @@ class exercice(Thread):
         self.Video = self.Video_thread.ListPoint[self.Video_thread.frame_count][0]
         if self.Video_thread.frame_count > 0:
             self.VideoPoint = self.Video_thread.ListPoint[self.Video_thread.frame_count-1][1]
-            self.VideoPoint = utils.Patron(self.VideoPoint[:, 1], True)
+            self.VideoPoint = utilitaries.Patron(self.VideoPoint[:, 1], True)
         self.Video_thread.frame_count += 1
 
-    def AddData(self, listSum, ymax):
+    def AddData(self, listSum, ymin, ymax):
         plt.cla()
-        plt.ylim(0, ymax)
+        plt.ylim(ymin, ymax)
         plt.xlim(0, len(self.listSum)-1)
         canvas = FigureCanvas(self.fig)
         plt.plot(range(0, len(listSum)), listSum)
@@ -180,7 +180,7 @@ class exercice(Thread):
                                       10, 11, 12, 13, 14, 15, 16]
                         for p in Comparatif:
                             # Normalisation
-                            self.sum += (utils.Distance(self.CameraPoint[p], self.VideoPoint[p])/(
+                            self.sum += (utilitaries.Distance(self.CameraPoint[p], self.VideoPoint[p])/(
                                 sqrt(2)*len(Comparatif)))
                         if (self.Camera_thread.frame_count) % 10 == 0:
                             self.sum = self.sum / 10
@@ -213,7 +213,7 @@ class exercice(Thread):
                           " == Video : " + str(self.Video_thread.frame_count), end="\r")
 #==============================================================================#
                 if (self.Camera_thread.frame_count) % 10 == 0:
-                    self.data = self.AddData(self.listSum, 1)
+                    self.data = self.AddData(self.listSum, 0, 1)
 
                 if self.data is not None and len(self.listSum) != 0:
                     self.Video[0:self.data.shape[0], self.Video.shape[1] -
@@ -234,12 +234,12 @@ class exercice(Thread):
                 self.Video[self.Video.shape[0] -
                            500:self.Video.shape[0], 0:500] = [0, 0, 0]
                 if self.VideoPoint is not None:
-                    self.Video = utils.draw(
+                    self.Video = utilitaries.draw(
                         self.VideoPoint, self.Video, [0, 255, 255], True)
 
                 if self.Camera is not None:
                     if self.Camera > 0:
-                        self.Video = utils.draw(
+                        self.Video = utilitaries.draw(
                             self.CameraPoint, self.Video, [255, 255, 0], False)
                     else:  # Si la personne sort du cadre de la caméra
                         self.Video[:, :] = [100, 100, 100]
@@ -270,12 +270,14 @@ class exercice(Thread):
         cv2.destroyWindow('Video')
 
     def fin(self):
-        self.Video[:, :] = [200, 200, 200]
+        self.Video = cv2.imread('wallpaper.png')
         if len(self.totalscore) == 0:
             self.totalscore.append(0)
         i = 0
-        self.fig.patch.set_facecolor('#c8c8c8')
+        self.fig.patch.set_facecolor('#000000')
         self.fig.patch.set_alpha(0.5)
+        plt.tick_params(axis='x', colors='white')
+        plt.tick_params(axis='y', colors='white')
         score = 0
         while True:
             Image = self.Video.copy()
@@ -283,36 +285,36 @@ class exercice(Thread):
                 score += self.totalscore[i]
                 i += 1
             cv2.putText(Image, str("Score :")+str(score), (50, 700),
-                        cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
-            self.data = self.AddData(self.totalscore[0:i], 250)
+                        cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 12)
+            self.data = self.AddData(self.totalscore[0:i], -10, 210)
             self.Video[0:self.data.shape[0], self.Video.shape[1] -
                        self.data.shape[1]:self.Video.shape[1]] = self.data
             # Note :
-            if self.erreurpourcent < 10:
+            if self.erreurpourcent < 5:
                 note = str("S")
                 colornote = (0, 215, 255)
-            elif self.erreurpourcent < 15:
+            elif self.erreurpourcent < 8:
                 note = str("A")
                 colornote = (0, 69, 255)
-            elif self.erreurpourcent < 20:
+            elif self.erreurpourcent < 12:
                 note = str("B")
                 colornote = (0, 140, 255)
-            elif self.erreurpourcent < 30:
+            elif self.erreurpourcent < 17:
                 note = str("C")
                 colornote = (0, 255, 255)
-            elif self.erreurpourcent < 50:
+            elif self.erreurpourcent < 22:
                 note = str("D")
                 colornote = (50, 205, 50)
-            elif self.erreurpourcent < 70:
+            elif self.erreurpourcent < 30:
                 note = str("E")
                 colornote = (50, 205, 154)
-            elif self.erreurpourcent < 100:
+            elif self.erreurpourcent < 50:
                 note = str("F")
                 colornote = (209, 206, 0)
             cv2.putText(Image, str("Note : "), (1000, 700),
-                        cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
+                        cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 12)
             cv2.putText(Image, note, (1400, 900),
-                        cv2.FONT_HERSHEY_SIMPLEX, 20, (0, 0, 0), 25)
+                        cv2.FONT_HERSHEY_SIMPLEX, 20, (255, 255, 255), 25)
             cv2.putText(Image, note, (1410, 900),
                         cv2.FONT_HERSHEY_SIMPLEX, 20, colornote, 25)
 
@@ -359,7 +361,7 @@ class exercice(Thread):
             #cv2.putText(Image, str("Courage : ")+str(self.countcourage),(50, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,140,255), 6)
             #cv2.putText(Image, str("Tres bien : ")+str(i),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,252,124), 6)
             cv2.putText(Image, str("Cliquez pour retourner au menu"),
-                        (50, 1000), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 5)
+                        (50, 1000), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 5)
             cv2.imshow('Video', Image)
 
             if (cv2.waitKey(25) & 0xFF == ord('q')) or self.clique == True:
