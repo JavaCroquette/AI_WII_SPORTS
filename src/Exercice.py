@@ -80,9 +80,9 @@ class exercice(Thread):
             self.VideoPoint = utile.Patron(self.VideoPoint[:, 1], True)
         self.Video_thread.frame_count += 1
 
-    def AddData(self,listSum,ymax):
+    def AddData(self,listSum,ymin,ymax):
         plt.cla()
-        plt.ylim(0, ymax)
+        plt.ylim(ymin, ymax)
         plt.xlim(0,len(self.listSum)-1)
         canvas = FigureCanvas(self.fig)
         plt.plot(range(0, len(listSum)), listSum)
@@ -215,7 +215,7 @@ class exercice(Thread):
                           " == Video : " + str(self.Video_thread.frame_count), end="\r")
 #==============================================================================#
                 if (self.Camera_thread.frame_count) % 10 == 0:
-                    self.data = self.AddData(self.listSum,1)
+                    self.data = self.AddData(self.listSum,0,1)
 
                 if self.data is not None and len(self.listSum) != 0:
                     self.Video[0:self.data.shape[0], self.Video.shape[1] -
@@ -268,20 +268,22 @@ class exercice(Thread):
         cv2.destroyWindow('Video')
 
     def fin(self):
-        self.Video[:, :] = [200, 200, 200]
+        self.Video = cv2.imread('wallpaper.png')
         if len(self.totalscore) == 0:
             self.totalscore.append(0)
         i = 0
-        self.fig.patch.set_facecolor('#c8c8c8')
+        self.fig.patch.set_facecolor('#000000')
         self.fig.patch.set_alpha(0.5)
+        plt.tick_params(axis='x', colors='white')
+        plt.tick_params(axis='y', colors='white')
         score = 0
         while True:
             Image = self.Video.copy()
             if i < len(self.totalscore):
                 score += self.totalscore[i]
                 i += 1
-            cv2.putText(Image, str("Score :")+str(score),(50, 700), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
-            self.data = self.AddData(self.totalscore[0:i],250)
+            cv2.putText(Image, str("Score :")+str(score),(50, 700), cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 12)
+            self.data = self.AddData(self.totalscore[0:i],-10,210)
             self.Video[0:self.data.shape[0], self.Video.shape[1] - self.data.shape[1]:self.Video.shape[1]] = self.data
             ##Note :
             if self.erreurpourcent < 5 :
@@ -305,8 +307,8 @@ class exercice(Thread):
             elif self.erreurpourcent < 50:
                 note = str("F")
                 colornote = (209,206,0)
-            cv2.putText(Image, str("Note : "),(1000, 700), cv2.FONT_HERSHEY_SIMPLEX, 4, (0,0,0), 12)
-            cv2.putText(Image, note,(1400, 900), cv2.FONT_HERSHEY_SIMPLEX, 20, (0,0,0), 25)
+            cv2.putText(Image, str("Note : "),(1000, 700), cv2.FONT_HERSHEY_SIMPLEX, 4, (255,255,255), 12)
+            cv2.putText(Image, note,(1400, 900), cv2.FONT_HERSHEY_SIMPLEX, 20, (255,255,255), 25)
             cv2.putText(Image, note,(1410, 900), cv2.FONT_HERSHEY_SIMPLEX, 20, colornote, 25)
 
             if i < self.countcourage:
@@ -337,7 +339,7 @@ class exercice(Thread):
             #cv2.putText(Image, str("Pas mal : ")+str(self.countpasmal),(500, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,215,255), 6)
             #cv2.putText(Image, str("Courage : ")+str(self.countcourage),(50, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,140,255), 6)
             #cv2.putText(Image, str("Tres bien : ")+str(i),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,252,124), 6)
-            cv2.putText(Image, str("Cliquez pour retourner au menu"),(50, 1000), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 5)
+            cv2.putText(Image, str("Cliquez pour retourner au menu"),(50, 1000), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 5)
             cv2.imshow('Video', Image)
 
             if (cv2.waitKey(25) & 0xFF == ord('q')) or self.clique == True:
