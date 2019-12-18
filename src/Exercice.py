@@ -284,25 +284,25 @@ class exercice(Thread):
             self.data = self.AddData(self.totalscore[0:i],250)
             self.Video[0:self.data.shape[0], self.Video.shape[1] - self.data.shape[1]:self.Video.shape[1]] = self.data
             ##Note :
-            if self.erreurpourcent < 10 :
+            if self.erreurpourcent < 5 :
                 note = str("S")
                 colornote = (0,215,255)
-            elif self.erreurpourcent < 15:
+            elif self.erreurpourcent < 8:
                 note = str("A")
                 colornote = (0,69,255)
-            elif self.erreurpourcent < 20:
+            elif self.erreurpourcent < 12:
                 note= str("B")
                 colornote = (0,140,255)
-            elif self.erreurpourcent < 30:
+            elif self.erreurpourcent < 17:
                 note = str("C")
                 colornote = (0,255,255)
-            elif self.erreurpourcent < 50:
+            elif self.erreurpourcent < 22:
                 note = str("D")
                 colornote = (50,205,50)
-            elif self.erreurpourcent < 70:
+            elif self.erreurpourcent < 30:
                 note = str("E")
                 colornote = (50,205,154)
-            elif self.erreurpourcent < 100:
+            elif self.erreurpourcent < 50:
                 note = str("F")
                 colornote = (209,206,0)
             cv2.putText(Image, str("Note : "),(1000, 700), cv2.FONT_HERSHEY_SIMPLEX, 4, (0,0,0), 12)
