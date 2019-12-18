@@ -2,7 +2,7 @@ import numpy as np
 from Video import video
 from Camera import camera
 from threading import Thread
-import utile
+import utils
 import screeninfo
 import posenet
 import argparse
@@ -16,9 +16,6 @@ import tensorflow.compat.v1 as tf
 from PIL import ImageFont, ImageDraw, Image
 import screeninfo
 tf.disable_v2_behavior()
-
-import win32api
-
 
 MIN = 0.01
 
@@ -67,7 +64,7 @@ class exercice(Thread):
         if len(self.Camera_thread.ListPoint) != 0:
             self.Camera = self.Camera_thread.ListPoint[0][0]
             if self.Camera > MIN:
-                self.CameraPoint = utile.Patron(
+                self.CameraPoint = utils.Patron(
                     self.Camera_thread.ListPoint[0][1][0], False)
                 self.Camera_thread.frame_count += 1
             del self.Camera_thread.ListPoint[0]
@@ -77,20 +74,20 @@ class exercice(Thread):
         self.Video = self.Video_thread.ListPoint[self.Video_thread.frame_count][0]
         if self.Video_thread.frame_count > 0:
             self.VideoPoint = self.Video_thread.ListPoint[self.Video_thread.frame_count-1][1]
-            self.VideoPoint = utile.Patron(self.VideoPoint[:, 1], True)
+            self.VideoPoint = utils.Patron(self.VideoPoint[:, 1], True)
         self.Video_thread.frame_count += 1
 
-    def AddData(self,listSum,ymax):
+    def AddData(self, listSum, ymax):
         plt.cla()
         plt.ylim(0, ymax)
-        plt.xlim(0,len(self.listSum)-1)
+        plt.xlim(0, len(self.listSum)-1)
         canvas = FigureCanvas(self.fig)
         plt.plot(range(0, len(listSum)), listSum)
         canvas.draw()
         data = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
         return data.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
 
-    def on_click(self,event, x, y, p1, p2):
+    def on_click(self, event, x, y, p1, p2):
         if event == cv2.EVENT_LBUTTONDOWN:
             self.clique = True
 
@@ -128,8 +125,6 @@ class exercice(Thread):
             #draw.text((textX, textY),  text, font = font, fill = (0, 215, 255, (i%30)*3))
             #Video = np.array(img_pil)
 
-
-
             # get boundary of this text
             textsize = cv2.getTextSize(text, font, 1+i/3 % 10, 24)[0]
 
@@ -138,8 +133,10 @@ class exercice(Thread):
             textY = int((Video.shape[0] + textsize[1]) / 2)
 
             # add text centered on image
-            cv2.putText(Video, text, (textX, textY), font, 1+i/3 %10, (0, 191, 255), 24)
-            cv2.putText(Video, text, (textX, textY), font, 1+i/3 %10, (0, 255, 255), 12)
+            cv2.putText(Video, text, (textX, textY), font, 1+i/3 %
+                        10, (0, 191, 255), 24)
+            cv2.putText(Video, text, (textX, textY), font, 1+i/3 %
+                        10, (0, 255, 255), 12)
             cv2.imshow('Video', Video)
             if hasattr(self, 'height'):
                 self.height, self.width = Video.shape[:2]
@@ -162,7 +159,8 @@ class exercice(Thread):
                 self.AddVideo()
 
         cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.setWindowProperty(
+            'Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.setMouseCallback('Video', self.on_click)
 
         self.Debut()
@@ -182,7 +180,7 @@ class exercice(Thread):
                                       10, 11, 12, 13, 14, 15, 16]
                         for p in Comparatif:
                             # Normalisation
-                            self.sum += (utile.Distance(self.CameraPoint[p], self.VideoPoint[p])/(
+                            self.sum += (utils.Distance(self.CameraPoint[p], self.VideoPoint[p])/(
                                 sqrt(2)*len(Comparatif)))
                         if (self.Camera_thread.frame_count) % 10 == 0:
                             self.sum = self.sum / 10
@@ -190,23 +188,23 @@ class exercice(Thread):
                             if self.sum < 0.3:
                                 self.i = 0
                                 self.score = 200
-                                colortext = (0,252,124)
+                                colortext = (0, 252, 124)
                                 self.counttresbien += 1
                             elif self.sum < 0.35:
                                 self.i = 1
                                 self.score = 100
-                                colortext = (47,255,173)
+                                colortext = (47, 255, 173)
                                 self.countbien += 1
                             elif self.sum < 0.4:
                                 self.i = 2
                                 self.score = 50
-                                colortext = (0,215,255)
-                                self.countpasmal +=1
+                                colortext = (0, 215, 255)
+                                self.countpasmal += 1
                             else:
                                 self.i = 3
                                 self.score = 0
-                                colortext = (0,140,255)
-                                self.countcourage +=1
+                                colortext = (0, 140, 255)
+                                self.countcourage += 1
                             self.sum = 0
                             self.totalscore.append(self.score)
                         self.check = False
@@ -215,7 +213,7 @@ class exercice(Thread):
                           " == Video : " + str(self.Video_thread.frame_count), end="\r")
 #==============================================================================#
                 if (self.Camera_thread.frame_count) % 10 == 0:
-                    self.data = self.AddData(self.listSum,1)
+                    self.data = self.AddData(self.listSum, 1)
 
                 if self.data is not None and len(self.listSum) != 0:
                     self.Video[0:self.data.shape[0], self.Video.shape[1] -
@@ -225,25 +223,28 @@ class exercice(Thread):
                     cv2.putText(self.Video, str("Marge d'erreurs:")+str(round(self.listSum[len(
                         self.listSum)-1], 2)), (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
                     img = IMAGE[self.i]
-                    self.Video[250:img.shape[0]+250, img.shape[1]+100 -img.shape[1]:img.shape[1]+100] = img
+                    self.Video[250:img.shape[0]+250, img.shape[1] +
+                               100 - img.shape[1]:img.shape[1]+100] = img
 #==============================================================================#
-                    cv2.putText(self.Video, str("+")+str(self.score), (400, 200),cv2.FONT_HERSHEY_SIMPLEX, 2, colortext, 4)
-                    cv2.putText(self.Video, str(sum(self.totalscore)), (1700, 250),cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0), 4)
+                    cv2.putText(self.Video, str("+")+str(self.score),
+                                (400, 200), cv2.FONT_HERSHEY_SIMPLEX, 2, colortext, 4)
+                    cv2.putText(self.Video, str(sum(self.totalscore)),
+                                (1700, 250), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
 #==============================================================================#
                 self.Video[self.Video.shape[0] -
                            500:self.Video.shape[0], 0:500] = [0, 0, 0]
                 if self.VideoPoint is not None:
-                    self.Video = utile.draw(
+                    self.Video = utils.draw(
                         self.VideoPoint, self.Video, [0, 255, 255], True)
 
                 if self.Camera is not None:
                     if self.Camera > 0:
-                        self.Video = utile.draw(
+                        self.Video = utils.draw(
                             self.CameraPoint, self.Video, [255, 255, 0], False)
                     else:  # Si la personne sort du cadre de la caméra
                         self.Video[:, :] = [100, 100, 100]
                         cv2.putText(self.Video, str("REVENEZ DEVANT LA CAMERA"),
-                                (50, 500), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
+                                    (50, 500), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
     #==============================================================================#
                 cv2.imshow('Video', self.Video)
     #==============================================================================#
@@ -261,7 +262,8 @@ class exercice(Thread):
         for i in self.listSum:
             b = b + i
         if self.Video_thread.frame_count > 10:
-            self.erreurpourcent = (b / (int(self.Video_thread.frame_count/10))* 100)
+            self.erreurpourcent = (
+                b / (int(self.Video_thread.frame_count/10)) * 100)
 
         self.fin()
         self.stopthread()
@@ -280,64 +282,84 @@ class exercice(Thread):
             if i < len(self.totalscore):
                 score += self.totalscore[i]
                 i += 1
-            cv2.putText(Image, str("Score :")+str(score),(50, 700), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
-            self.data = self.AddData(self.totalscore[0:i],250)
-            self.Video[0:self.data.shape[0], self.Video.shape[1] - self.data.shape[1]:self.Video.shape[1]] = self.data
-            ##Note :
-            if self.erreurpourcent < 10 :
+            cv2.putText(Image, str("Score :")+str(score), (50, 700),
+                        cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
+            self.data = self.AddData(self.totalscore[0:i], 250)
+            self.Video[0:self.data.shape[0], self.Video.shape[1] -
+                       self.data.shape[1]:self.Video.shape[1]] = self.data
+            # Note :
+            if self.erreurpourcent < 10:
                 note = str("S")
-                colornote = (0,215,255)
+                colornote = (0, 215, 255)
             elif self.erreurpourcent < 15:
                 note = str("A")
-                colornote = (0,69,255)
+                colornote = (0, 69, 255)
             elif self.erreurpourcent < 20:
-                note= str("B")
-                colornote = (0,140,255)
+                note = str("B")
+                colornote = (0, 140, 255)
             elif self.erreurpourcent < 30:
                 note = str("C")
-                colornote = (0,255,255)
+                colornote = (0, 255, 255)
             elif self.erreurpourcent < 50:
                 note = str("D")
-                colornote = (50,205,50)
+                colornote = (50, 205, 50)
             elif self.erreurpourcent < 70:
                 note = str("E")
-                colornote = (50,205,154)
+                colornote = (50, 205, 154)
             elif self.erreurpourcent < 100:
                 note = str("F")
-                colornote = (209,206,0)
-            cv2.putText(Image, str("Note : "),(1000, 700), cv2.FONT_HERSHEY_SIMPLEX, 4, (0,0,0), 12)
-            cv2.putText(Image, note,(1400, 900), cv2.FONT_HERSHEY_SIMPLEX, 20, (0,0,0), 25)
-            cv2.putText(Image, note,(1410, 900), cv2.FONT_HERSHEY_SIMPLEX, 20, colornote, 25)
+                colornote = (209, 206, 0)
+            cv2.putText(Image, str("Note : "), (1000, 700),
+                        cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 12)
+            cv2.putText(Image, note, (1400, 900),
+                        cv2.FONT_HERSHEY_SIMPLEX, 20, (0, 0, 0), 25)
+            cv2.putText(Image, note, (1410, 900),
+                        cv2.FONT_HERSHEY_SIMPLEX, 20, colornote, 25)
 
             if i < self.countcourage:
-                cv2.putText(Image, str("Courage : ")+str(i),(50, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,140,255), 4)
-                cv2.putText(Image, str("Bien : ")+str(0),(1050, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (47,255,173), 4)
-                cv2.putText(Image, str("Pas mal : ")+str(0),(500, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,215,255), 4)
-                cv2.putText(Image, str("Tres bien : ")+str(0),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,252,124), 4)
+                cv2.putText(Image, str("Courage : ")+str(i), (50, 400),
+                            cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 140, 255), 4)
+                cv2.putText(Image, str("Bien : ")+str(0), (1050, 400),
+                            cv2.FONT_HERSHEY_SIMPLEX, 2, (47, 255, 173), 4)
+                cv2.putText(Image, str("Pas mal : ")+str(0), (500, 400),
+                            cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 215, 255), 4)
+                cv2.putText(Image, str("Tres bien : ")+str(0), (1400, 400),
+                            cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 252, 124), 4)
             else:
-                cv2.putText(Image, str("Courage : ")+str(self.countcourage),(50, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,140,255), 4)
+                cv2.putText(Image, str("Courage : ")+str(self.countcourage),
+                            (50, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 140, 255), 4)
                 if i-self.countcourage < self.countpasmal:
-                    cv2.putText(Image, str("Pas mal : ")+str(i-self.countcourage),(500, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,215,255), 4)
-                    cv2.putText(Image, str("Bien : ")+str(0),(1050, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (47,255,173), 6)
-                    cv2.putText(Image, str("Tres bien : ")+str(0),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,252,124), 4)
+                    cv2.putText(Image, str("Pas mal : ")+str(i-self.countcourage),
+                                (500, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 215, 255), 4)
+                    cv2.putText(Image, str("Bien : ")+str(0), (1050, 400),
+                                cv2.FONT_HERSHEY_SIMPLEX, 2, (47, 255, 173), 6)
+                    cv2.putText(Image, str("Tres bien : ")+str(0), (1400, 400),
+                                cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 252, 124), 4)
                 else:
-                    cv2.putText(Image, str("Pas mal : ")+str(self.countpasmal),(500, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,215,255), 4)
+                    cv2.putText(Image, str("Pas mal : ")+str(self.countpasmal),
+                                (500, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 215, 255), 4)
                     if i-self.countpasmal-self.countcourage < self.countbien:
-                        cv2.putText(Image, str("Bien : ")+str(i-self.countpasmal-self.countcourage),(1050, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (47,255,173), 4)
-                        cv2.putText(Image, str("Tres bien : ")+str(0),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,252,124), 4)
+                        cv2.putText(Image, str("Bien : ")+str(i-self.countpasmal-self.countcourage),
+                                    (1050, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (47, 255, 173), 4)
+                        cv2.putText(Image, str("Tres bien : ")+str(0), (1400, 400),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 252, 124), 4)
                     else:
-                        cv2.putText(Image, str("Bien : ")+str(self.countbien),(1050, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (47,255,173), 4)
+                        cv2.putText(Image, str("Bien : ")+str(self.countbien),
+                                    (1050, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (47, 255, 173), 4)
                         if i-self.countbien-self.countcourage-self.countpasmal < self.counttresbien:
-                            cv2.putText(Image, str("Tres Bien : ")+str(i-self.countbien-self.countcourage-self.countpasmal),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,252,124), 4)
+                            cv2.putText(Image, str("Tres Bien : ")+str(i-self.countbien-self.countcourage -
+                                                                       self.countpasmal), (1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 252, 124), 4)
                         else:
-                            cv2.putText(Image, str("Tres Bien : ")+str(self.counttresbien),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,252,124), 4)
+                            cv2.putText(Image, str("Tres Bien : ")+str(self.counttresbien),
+                                        (1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 252, 124), 4)
             time.sleep(.05)
 
             #cv2.putText(Image, str("Bien : ")+str(self.countbien),(950, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (47,255,173), 6)
             #cv2.putText(Image, str("Pas mal : ")+str(self.countpasmal),(500, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,215,255), 6)
             #cv2.putText(Image, str("Courage : ")+str(self.countcourage),(50, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,140,255), 6)
             #cv2.putText(Image, str("Tres bien : ")+str(i),(1400, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,252,124), 6)
-            cv2.putText(Image, str("Cliquez pour retourner au menu"),(50, 1000), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 5)
+            cv2.putText(Image, str("Cliquez pour retourner au menu"),
+                        (50, 1000), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 5)
             cv2.imshow('Video', Image)
 
             if (cv2.waitKey(25) & 0xFF == ord('q')) or self.clique == True:
