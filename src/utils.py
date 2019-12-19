@@ -1,6 +1,6 @@
 import numpy as np
-from Video import video
-from Camera import camera
+from video import video
+from camera import camera
 import random
 import screeninfo
 import posenet
@@ -34,40 +34,51 @@ tf.disable_v2_behavior()
 # 16 - right ankle
 ################################################################################
 
-Comparatif = [1,2,5,6,7,8,9,10,11,12,13,14,15,16]
+Comparatif = [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
 ################################################################################
 #       Desine les point d'un corps humain détecté par la camré                #
 ################################################################################
-def draw(Point,Video,color,postion):
+
+
+def draw(Point, Video, color, postion):
     cv_keypoints = []
     Liste = []
     for y in Comparatif:
         if postion:
-            cv_keypoints.append(cv2.KeyPoint( Point[y][1]*250, Point[y][0]*500+Video.shape[0]-500, 5))
-            Liste.append( [int(Point[y][1]*250), int(Point[y][0]*500+Video.shape[0]-500)])
+            cv_keypoints.append(cv2.KeyPoint(
+                Point[y][1]*250, Point[y][0]*500+Video.shape[0]-500, 5))
+            Liste.append(
+                [int(Point[y][1]*250), int(Point[y][0]*500+Video.shape[0]-500)])
         else:
-            cv_keypoints.append(cv2.KeyPoint( 250+Point[y][1]*250, Point[y][0]*500+Video.shape[0]-500, 5))
-            Liste.append( [int(250+Point[y][1]*250), int(Point[y][0]*500+Video.shape[0]-500)])
+            cv_keypoints.append(cv2.KeyPoint(
+                250+Point[y][1]*250, Point[y][0]*500+Video.shape[0]-500, 5))
+            Liste.append([int(250+Point[y][1]*250),
+                          int(Point[y][0]*500+Video.shape[0]-500)])
     draw_squeleton(Video, Liste, color)
-    Video = cv2.drawKeypoints(Video, cv_keypoints, outImage=np.array([]), color=(color[0],color[1],color[2]), flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    Video = cv2.drawKeypoints(Video, cv_keypoints, outImage=np.array([]), color=(
+        color[0], color[1], color[2]), flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     return Video
 
 ################################################################################
 #               Permet de designer le squelette d'une personne                 #
 ################################################################################
+
+
 def draw_squeleton(image, points, color):
     i = len(points) - 17
-    Liste = [[5+i,6+i],[5+i,7+i],[7+i,9+i],[6+i,8+i],[8+i,10+i],[5+i,11+i],
-             [6+i,12+i],[11+i,13+i],[13+i,15+i],[12+i,14+i],[14+i,16+i],
-             [11+i,12+i]]
+    Liste = [[5+i, 6+i], [5+i, 7+i], [7+i, 9+i], [6+i, 8+i], [8+i, 10+i], [5+i, 11+i],
+             [6+i, 12+i], [11+i, 13+i], [13+i, 15+i], [12+i, 14+i], [14+i, 16+i],
+             [11+i, 12+i]]
     for i in Liste:
         cv2.line(image, (points[i[0]][0], points[i[0]][1]),
-                (points[i[1]][0], points[i[1]][1]), color, 2)
+                 (points[i[1]][0], points[i[1]][1]), color, 2)
 
 ################################################################################
 #       Definie les 4 point du rectangle d'une personne et normalise           #
 ################################################################################
+
+
 def Patron(Liste, Video):
     if not len(Liste) == 0:
         # TODO si quelqu'un arrive a faire sans les liste x)
@@ -84,8 +95,8 @@ def Patron(Liste, Video):
         B = [Xmax, Ymax]
         C = [Xmin, Ymin]
         D = [Xmax, Ymin]
-        AB = Distance(A,B)
-        AC = Distance(A,C)
+        AB = Distance(A, B)
+        AC = Distance(A, C)
         for i in range(0, len(Liste)):
             Liste[i] -= C
             Liste[i][0] = Liste[i][0]/(AB)
@@ -105,5 +116,7 @@ def Sqr(a):
 ################################################################################
 #                               Distance de 2 points                           #
 ################################################################################
-def Distance(A,B):
+
+
+def Distance(A, B):
     return sqrt(Sqr(B[1]-A[1])+Sqr(B[0]-A[0]))

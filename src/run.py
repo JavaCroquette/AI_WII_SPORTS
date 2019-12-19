@@ -1,5 +1,5 @@
 import multiprocessing as mp
-from Exercice import exercice
+from exercice import exercice
 import posenet
 import argparse
 import cv2

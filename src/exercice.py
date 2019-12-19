@@ -1,8 +1,8 @@
 import numpy as np
-from Video import video
-from Camera import camera
+from video import video
+from camera import camera
 from threading import Thread
-import utilitaries
+import utils
 import screeninfo
 import posenet
 import argparse
@@ -67,7 +67,7 @@ class exercice(Thread):
         if len(self.Camera_thread.ListPoint) != 0:
             self.Camera = self.Camera_thread.ListPoint[0][0]
             if self.Camera > MIN:
-                self.CameraPoint = utilitaries.Patron(
+                self.CameraPoint = utils.Patron(
                     self.Camera_thread.ListPoint[0][1][0], False)
                 self.Camera_thread.frame_count += 1
             del self.Camera_thread.ListPoint[0]
@@ -77,7 +77,7 @@ class exercice(Thread):
         self.Video = self.Video_thread.ListPoint[self.Video_thread.frame_count][0]
         if self.Video_thread.frame_count > 0:
             self.VideoPoint = self.Video_thread.ListPoint[self.Video_thread.frame_count-1][1]
-            self.VideoPoint = utilitaries.Patron(self.VideoPoint[:, 1], True)
+            self.VideoPoint = utils.Patron(self.VideoPoint[:, 1], True)
         self.Video_thread.frame_count += 1
 
     def AddData(self, listSum, ymin, ymax):
@@ -152,13 +152,13 @@ class exercice(Thread):
         self.check = False
         self.Camera_thread.frame_count = 0
 
-    def Diff(self,A,B):
+    def Diff(self, A, B):
         Camera = 0
         Video = 0
-        for i in range(0,len(A[0])):
-            Camera += utilitaries.Distance(A[0][i],B[0][i])
-            Video +=  utilitaries.Distance(A[1][i],B[1][i])
-        return round(Camera/Video,2)*100-100
+        for i in range(0, len(A[0])):
+            Camera += utils.Distance(A[0][i], B[0][i])
+            Video += utils.Distance(A[1][i], B[1][i])
+        return round(Camera/Video, 2)*100-100
 
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
@@ -185,7 +185,7 @@ class exercice(Thread):
             if self.Video is not None:  # On check si il y en a deux
                 if self.check:
                     if self.Ancien is None:
-                        self.Ancien = [self.CameraPoint,self.VideoPoint]
+                        self.Ancien = [self.CameraPoint, self.VideoPoint]
                     print("Camera : " + str(self.Camera_thread.frame_count) +
                           " -- Video : " + str(self.Video_thread.frame_count), end="\r")
                     if self.Camera > MIN:
@@ -193,12 +193,13 @@ class exercice(Thread):
                                       10, 11, 12, 13, 14, 15, 16]
                         for p in Comparatif:
                             # Normalisation
-                            self.sum += (utilitaries.Distance(self.CameraPoint[p], self.VideoPoint[p])/(
+                            self.sum += (utils.Distance(self.CameraPoint[p], self.VideoPoint[p])/(
                                 sqrt(2)*len(Comparatif)))
                         if (self.Camera_thread.frame_count) % 10 == 0:
                             self.sum = self.sum / 10
-                            self.Difference = self.Diff(self.Ancien,[self.CameraPoint,self.VideoPoint])
-                            if self.sum + abs(self.Difference*0.01) < 0.4 :
+                            self.Difference = self.Diff(
+                                self.Ancien, [self.CameraPoint, self.VideoPoint])
+                            if self.sum + abs(self.Difference*0.01) < 0.4:
                                 self.i = 0
                                 self.score = 200
                                 colortext = (0, 252, 124)
@@ -222,14 +223,15 @@ class exercice(Thread):
                             self.sum = 0
                             self.totalscore.append(self.score)
                             self.ListDifference.append(self.Difference)
-                            self.Ancien = [self.CameraPoint,self.VideoPoint]
+                            self.Ancien = [self.CameraPoint, self.VideoPoint]
                         self.check = False
                 else:
                     print("Camera : " + str(self.Camera_thread.frame_count) +
                           " == Video : " + str(self.Video_thread.frame_count), end="\r")
 #==============================================================================#
                 if (self.Camera_thread.frame_count) % 10 == 0:
-                    self.data = self.AddData(self.listSum+abs(np.array(self.ListDifference)*0.01), 0, 2)
+                    self.data = self.AddData(
+                        self.listSum+abs(np.array(self.ListDifference)*0.01), 0, 2)
                 if self.data is not None and len(self.listSum) != 0:
                     self.Video[0:self.data.shape[0], self.Video.shape[1] -
                                self.data.shape[1]:self.Video.shape[1]] = self.data
@@ -251,12 +253,12 @@ class exercice(Thread):
                 self.Video[self.Video.shape[0] -
                            500:self.Video.shape[0], 0:500] = [0, 0, 0]
                 if self.VideoPoint is not None:
-                    self.Video = utilitaries.draw(
+                    self.Video = utils.draw(
                         self.VideoPoint, self.Video, [0, 255, 255], True)
 
                 if self.Camera is not None:
                     if self.Camera > 0:
-                        self.Video = utilitaries.draw(
+                        self.Video = utils.draw(
                             self.CameraPoint, self.Video, [255, 255, 0], False)
                     else:  # Si la personne sort du cadre de la caméra
                         self.Video[:, :] = [100, 100, 100]
@@ -302,7 +304,7 @@ class exercice(Thread):
             self.Video[0:self.data.shape[0], self.Video.shape[1] -
                        self.data.shape[1]:self.Video.shape[1]] = self.data
             cv2.putText(Image, str("Distance moyenne : ")+str(round(sum(self.ListDifference)/len(self.ListDifference)))+str(" %"), (50, 200),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
             # Note :
             cv2.putText(Image, str("Note : "), (1000, 700),
                         cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 12)
