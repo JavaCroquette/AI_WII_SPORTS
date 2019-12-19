@@ -2,6 +2,8 @@
 
 ## Need Python 3+ and Tensorflow
 
+[CUDA](https://developer.nvidia.com/cuda-downloads) or equivalent is strongly recommended
+
 ## Packages to install
 
 On debian/ubuntu :
