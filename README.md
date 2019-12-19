@@ -8,7 +8,7 @@
 
 ## Installation
 
-Clone repository an install following dependencies
+### Clone repository an install following dependencies
 
 On debian/ubuntu :
 
