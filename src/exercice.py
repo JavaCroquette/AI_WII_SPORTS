@@ -155,9 +155,10 @@ class exercice(Thread):
     def Diff(self, A, B):
         Camera = 0
         Video = 0
-        for i in range(0, len(A[0])):
-            Camera += utils.Distance(A[0][i], B[0][i])
-            Video += utils.Distance(A[1][i], B[1][i])
+        if A[0] is not None:
+            for i in range(0, len(A[0])):
+                Camera += utils.Distance(A[0][i], B[0][i])
+                Video += utils.Distance(A[1][i], B[1][i])
         return round(Camera/Video, 2)*100-100
 
     def run(self):

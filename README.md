@@ -1,10 +1,14 @@
 # AI_WII_SPORTS
 
-## Need Python 3+ and Tensorflow
+## Requirements
 
-[CUDA](https://developer.nvidia.com/cuda-downloads) or equivalent is strongly recommended
+- Python 3+
+- Tensorflow
+- [CUDA](https://developer.nvidia.com/cuda-downloads) or equivalent is strongly recommended
 
-## Packages to install
+## Installation
+
+Clone repository an install following dependencies
 
 On debian/ubuntu :
 
@@ -21,21 +25,26 @@ pip install Pillow cv2 argparse numpy
 
 ## Execution
 
-- Put `.mp4` file in the `video/` directory
-- For each video file run in `src/`
+- Put `.mp4` file in the `videos/` directory
+- For each video file run
 
-  - Linux :
+  - Linux
     ```
+    cd src/
     python3 get_from_video.py --file [yourfilename]
     ```
-  - Windows :
+  - Windows
     ```
+    cd src/
     python get_from_video.py --file [yourfilename]
     ```
 
 - To run
-
-```
-cd src/
-python3 run.py
-```
+  - Linux
+    ```
+    python3 run.py
+    ```
+  - Windows
+    ```
+    python run.py
+    ```
