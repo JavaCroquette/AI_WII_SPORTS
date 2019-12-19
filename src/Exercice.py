@@ -38,6 +38,9 @@ class exercice(Thread):
         print(self.height)
         self.clique = False
         self.arret = True
+        self.Ancien = None
+        self.Difference = 0
+        self.ListDifference = []
         self.Camera_thread = camera(args, sess, model_cfg, model_outputs)
         self.Video_thread = video(MOT_DOUX, cheminV, cheminN)
         self.VideoPoint = None
@@ -53,7 +56,7 @@ class exercice(Thread):
         self.sum = 0
         self.score = 0
         self.totalscore = []
-        self.erreurpourcent = 0
+        self.erreurpourcent = None
         self.counttresbien = 0
         self.countbien = 0
         self.countpasmal = 0
@@ -149,6 +152,14 @@ class exercice(Thread):
         self.check = False
         self.Camera_thread.frame_count = 0
 
+    def Diff(self,A,B):
+        Camera = 0
+        Video = 0
+        for i in range(0,len(A[0])):
+            Camera += utilitaries.Distance(A[0][i],B[0][i])
+            Video +=  utilitaries.Distance(A[1][i],B[1][i])
+        return round(Camera/Video,2)*100-100
+
     def run(self):
         """Code à exécuter pendant l'exécution du thread."""
         self.Camera_thread.start()
@@ -173,6 +184,8 @@ class exercice(Thread):
                     self.AddVideo()
             if self.Video is not None:  # On check si il y en a deux
                 if self.check:
+                    if self.Ancien is None:
+                        self.Ancien = [self.CameraPoint,self.VideoPoint]
                     print("Camera : " + str(self.Camera_thread.frame_count) +
                           " -- Video : " + str(self.Video_thread.frame_count), end="\r")
                     if self.Camera > MIN:
@@ -184,18 +197,18 @@ class exercice(Thread):
                                 sqrt(2)*len(Comparatif)))
                         if (self.Camera_thread.frame_count) % 10 == 0:
                             self.sum = self.sum / 10
-                            self.listSum.append(self.sum)
-                            if self.sum < 0.3:
+                            self.Difference = self.Diff(self.Ancien,[self.CameraPoint,self.VideoPoint])
+                            if self.sum + abs(self.Difference*0.01) < 0.4 :
                                 self.i = 0
                                 self.score = 200
                                 colortext = (0, 252, 124)
                                 self.counttresbien += 1
-                            elif self.sum < 0.35:
+                            elif self.sum + abs(self.Difference*0.01) < 0.6:
                                 self.i = 1
                                 self.score = 100
                                 colortext = (47, 255, 173)
                                 self.countbien += 1
-                            elif self.sum < 0.4:
+                            elif self.sum + abs(self.Difference*0.01) < 0.8:
                                 self.i = 2
                                 self.score = 50
                                 colortext = (0, 215, 255)
@@ -205,23 +218,27 @@ class exercice(Thread):
                                 self.score = 0
                                 colortext = (0, 140, 255)
                                 self.countcourage += 1
+                            self.listSum.append(self.sum)
                             self.sum = 0
                             self.totalscore.append(self.score)
+                            self.ListDifference.append(self.Difference)
+                            self.Ancien = [self.CameraPoint,self.VideoPoint]
                         self.check = False
                 else:
                     print("Camera : " + str(self.Camera_thread.frame_count) +
                           " == Video : " + str(self.Video_thread.frame_count), end="\r")
 #==============================================================================#
                 if (self.Camera_thread.frame_count) % 10 == 0:
-                    self.data = self.AddData(self.listSum, 0, 1)
-
+                    self.data = self.AddData(self.listSum+abs(np.array(self.ListDifference)*0.01), 0, 2)
                 if self.data is not None and len(self.listSum) != 0:
                     self.Video[0:self.data.shape[0], self.Video.shape[1] -
                                self.data.shape[1]:self.Video.shape[1]] = self.data
                     cv2.putText(self.Video, str(
-                        MOT_DOUX[self.i]), (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+                        MOT_DOUX[self.i]), (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 2)
                     cv2.putText(self.Video, str("Marge d'erreurs:")+str(round(self.listSum[len(
-                        self.listSum)-1], 2)), (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+                        self.listSum)-1], 2)), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+                    cv2.putText(self.Video, str("Distance d'erreurs:")+str(round(self.ListDifference[len(
+                        self.ListDifference)-1], 2))+str(" %"), (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
                     img = IMAGE[self.i]
                     self.Video[250:img.shape[0]+250, img.shape[1] +
                                100 - img.shape[1]:img.shape[1]+100] = img
@@ -258,19 +275,12 @@ class exercice(Thread):
                 self.stopthread()
                 break
 
-        b = 0
-        for i in self.listSum:
-            b = b + i
-        if self.Video_thread.frame_count > 10:
-            self.erreurpourcent = (
-                b / (int(self.Video_thread.frame_count/10)) * 100)
-
         self.fin()
         self.stopthread()
         cv2.destroyWindow('Video')
 
     def fin(self):
-        self.Video = cv2.imread('wallpaper.png')
+        self.Video = cv2.imread('img/wallpaper.png')
         if len(self.totalscore) == 0:
             self.totalscore.append(0)
         i = 0
@@ -284,39 +294,46 @@ class exercice(Thread):
             if i < len(self.totalscore):
                 score += self.totalscore[i]
                 i += 1
+            else:
+                self.erreurpourcent = (score / (len(self.totalscore)*150))
             cv2.putText(Image, str("Score :")+str(score), (50, 700),
                         cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 12)
             self.data = self.AddData(self.totalscore[0:i], -10, 210)
             self.Video[0:self.data.shape[0], self.Video.shape[1] -
                        self.data.shape[1]:self.Video.shape[1]] = self.data
+            cv2.putText(Image, str("Distance moyenne : ")+str(round(sum(self.ListDifference)/len(self.ListDifference)))+str(" %"), (50, 200),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
             # Note :
-            if self.erreurpourcent < 5:
-                note = str("S")
-                colornote = (0, 215, 255)
-            elif self.erreurpourcent < 8:
-                note = str("A")
-                colornote = (0, 69, 255)
-            elif self.erreurpourcent < 12:
-                note = str("B")
-                colornote = (0, 140, 255)
-            elif self.erreurpourcent < 17:
-                note = str("C")
-                colornote = (0, 255, 255)
-            elif self.erreurpourcent < 22:
-                note = str("D")
-                colornote = (50, 205, 50)
-            elif self.erreurpourcent < 30:
-                note = str("E")
-                colornote = (50, 205, 154)
-            elif self.erreurpourcent < 50:
-                note = str("F")
-                colornote = (209, 206, 0)
             cv2.putText(Image, str("Note : "), (1000, 700),
                         cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 12)
-            cv2.putText(Image, note, (1400, 900),
-                        cv2.FONT_HERSHEY_SIMPLEX, 20, (255, 255, 255), 25)
-            cv2.putText(Image, note, (1410, 900),
-                        cv2.FONT_HERSHEY_SIMPLEX, 20, colornote, 25)
+
+            if self.erreurpourcent is not None:
+                print(self.erreurpourcent)
+                if self.erreurpourcent > 0.6:
+                    note = str("S")
+                    colornote = (0, 215, 255)
+                elif self.erreurpourcent > 0.5:
+                    note = str("A")
+                    colornote = (0, 69, 255)
+                elif self.erreurpourcent > 0.4:
+                    note = str("B")
+                    colornote = (0, 140, 255)
+                elif self.erreurpourcent > 0.3:
+                    note = str("C")
+                    colornote = (0, 255, 255)
+                elif self.erreurpourcent > 0.2:
+                    note = str("D")
+                    colornote = (50, 205, 50)
+                elif self.erreurpourcent > 0.1:
+                    note = str("E")
+                    colornote = (50, 205, 154)
+                else:
+                    note = str("F")
+                    colornote = (209, 206, 0)
+                cv2.putText(Image, note, (1400, 900),
+                            cv2.FONT_HERSHEY_SIMPLEX, 20, (255, 255, 255), 25)
+                cv2.putText(Image, note, (1410, 900),
+                            cv2.FONT_HERSHEY_SIMPLEX, 20, colornote, 25)
 
             if i < self.countcourage:
                 cv2.putText(Image, str("Courage : ")+str(i), (50, 400),
