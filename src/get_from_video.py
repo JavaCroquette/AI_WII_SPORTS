@@ -3,6 +3,7 @@ import argparse
 import time
 import cv2
 import numpy as np
+from os.path import join, dirname, realpath
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
@@ -13,16 +14,20 @@ parser.add_argument('--file', type=str, default=None,
                     help="Optionally use a video file instead of a live camera")
 args = parser.parse_args()
 
+path = dirname(realpath(__file__)).replace('src', 'videos')
+
+
 def main():
     if args.file is None:
         raise OSError("No file provided")
     savePoses = np.array([])
+    outputFileName = args.file.replace('.mp4', '')
     with tf.Session() as sess:
         start = time.time()
         frame_count = 0
         model_cfg, model_outputs = posenet.load_model(args.model, sess)
         output_stride = model_cfg['output_stride']
-        cap = cv2.VideoCapture(args.file)
+        cap = cv2.VideoCapture(join(path, args.file))
         while True:
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 self.stopthread()
@@ -42,7 +47,7 @@ def main():
                 displacement_bwd_result.squeeze(axis=0),
                 output_stride=output_stride,
                 max_pose_detections=1,
-                min_pose_score=0.30)    
+                min_pose_score=0.30)
             newPose = []
             for pi in range(len(pose_scores)):
                 if pose_scores[pi] == 0.:
@@ -56,7 +61,7 @@ def main():
                         savePoses = np.append(
                             savePoses, np.array([newPose]), axis=0)
 
-            np.save(args.file, savePoses)
+            np.save(join(path, outputFileName), savePoses)
             keypoint_coords *= output_scale
 
             frame_count += 1
